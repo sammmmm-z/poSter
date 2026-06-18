@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>poSter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Open+Sans:wght+400;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f7fc;
+            color: #333;
+            font-family: 'Open Sans', sans-serif;
+        }
+        /* --- Initial Fade-in Animation Preparation --- */
+        .title, .login-button, .login-div p {
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+            transform: translateY(10px); 
+        }
+        
+        .title {
+            font-size: clamp(80px, 15vw, 250px); 
+            font-family: 'Playfair Display', serif; 
+            text-align: center;
+            margin: 15vh auto 50px auto; 
+            color: #62a8a8; 
+            text-shadow: 0 4px 8px rgba(111, 199, 199, 0.3); 
+        }
+
+        .login-div{
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: auto; 
+        }
+
+        .login-div p {
+            margin-top: 15px;
+            color: #666;
+            font-size: 16px;
+        }
+
+        .login-button {
+            font-family: 'Open Sans', Arial, sans-serif;
+            width: 200px;
+            height: 65px;
+            border-radius: 35px;
+            font-size: 18px; 
+            display: block;
+            margin: 0 auto 5px auto;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+
+            color: #ffffff;
+            background-color: #62a8a8;
+            font-weight: 700;
+            
+            box-shadow: 0 8px 20px rgba(111, 199, 199, 0.5);
+        }
+
+        .login-button:hover {
+            background-color: #81c9c9;
+            box-shadow: 0 10px 25px rgba(111, 199, 199, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .login-button:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .bottom {
+            font-family: 'Open Sans', sans-serif;
+            margin-top: auto;
+            text-align: center;
+            padding: 15px 0;
+            font-size: 14px;
+
+            color: #888;
+            font-weight: 400;
+        }
+
+        /* --- Modal Styles --- */
+
+        #modal-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            display: none;
+            pointer-events: none; 
+        }
+
+        #login-modal {
+            position: absolute;
+            width: 350px;
+            height: 450px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            text-align: center; 
+
+            top: 50%;
+            left: 50%;
+            
+            /* Initial state for animation */
+            opacity: 0; 
+            transform: translate(-50%, -40%);
+
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out; 
+            
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        .login-signup {
+            font-family: 'Playfair Display', serif;
+            color: #62a8a8;
+            font-size: 35px;
+            margin: 0 0 10px 0;
+        }
+        
+        #close-modal-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+            font-weight: bold;
+            line-height: 20px;
+            transition: color 0.2s;
+        }
+        #close-modal-btn:hover {
+            color: #333;
+        }
+
+        /* --- Form and Tab Styles --- */
+        .tab-controls {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #888;
+            font-weight: 700;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            color: #62a8a8;
+            border-bottom: 3px solid #62a8a8;
+        }
+
+        .tab-content {
+            flex-grow: 1; 
+            position: relative;
+            overflow: visible; 
+        }
+
+        /* Styles for form pop-off transition */
+        .tab-content form {
+            position: absolute;
+            width: 100%;
+            top: 0;
+            transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+            padding-right: 2px; 
+            transform-origin: center center;
+            /* FIX 1: Add transition for z-index (for smooth pointer-events handling) */
+            transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out, z-index 0s 0.4s, pointer-events 0s 0.4s;
+        }
+
+        /* FIX 2: Set default z-index and pointer-events for hidden forms */
+        #login-form {
+            z-index: 10; /* Login form is active by default */
+            pointer-events: auto;
+        }
+
+        #signup-form {
+            z-index: 5; /* Signup form is hidden by default */
+            pointer-events: none;
+        }
+
+        /* When a form is visually hidden, remove its click/input capability */
+        .tab-content form[style*="opacity: 0"] {
+            pointer-events: none;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: 700;
+            color: white;
+            background-color: #62a8a8;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+        }
+
+        .submit-btn:hover {
+            background-color: #81c9c9;
+        }
+        
+        .message {
+            margin-top: 15px;
+            font-size: 14px;
+            min-height: 20px;
+        }
+    </style>
+</head>
+<body>
+    
+    <h1 class="title" id="main-title">poSter</h1>
+
+    <div class="login-div">
+        <button class="login-button" id="login-btn">LOGIN / SIGN UP</button>
+        <p id="login-text">Join the best secure community and share your moments!</p>
+    </div>
+
+    <p class="bottom">Copyright Sam Zhang 2025 beta 0.3</p>
+
+    <div id="modal-wrapper">
+        <div id="login-modal">
+            <span id="close-modal-btn">&times;</span> 
+            <h2 class="login-signup">poSter</h2>
+            
+            <div class="tab-controls">
+                <button class="tab-btn active" id="tab-login">LOGIN</button>
+                <button class="tab-btn" id="tab-signup">SIGN UP</button>
+            </div>
+
+            <div class="tab-content">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="submit-btn">LOGIN</button>
+                    <div id="login-message" class="message"></div>
+                </form>
+
+                <form id="signup-form">
+                    <div class="form-group">
+                        <label for="signup-username">Username</label>
+                        <input type="text" id="signup-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-confirm-password">Confirm Password</label>
+                        <input type="password" id="signup-confirm-password" required>
+                    </div>
+                    <button type="submit" class="submit-btn">SIGN UP</button>
+                    <div id="signup-message" class="message"></div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+    <script>
+        // Get elements for initial animation
+        const title = document.getElementById('main-title');
+        const button = document.getElementById('login-btn');
+        const text = document.getElementById('login-text');
+
+        // Get modal elements
+        const modalWrapper = document.getElementById('modal-wrapper');
+        const loginModal = document.getElementById('login-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        
+        // Tab and Form elements
+        const tabLoginBtn = document.getElementById('tab-login');
+        const tabSignupBtn = document.getElementById('tab-signup');
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        const signupMessage = document.getElementById('signup-message');
+
+        // Initial Fade-in Animation function
+        const animateElement = (element, delay) => {
+            setTimeout(() => {
+                element.style.opacity = '1';
+                element.style.transform = 'translateY(0)';
+            }, delay);
+        };
+
+        // ------------------ Execute Initial Fade-in Animation ------------------
+        animateElement(title, 500);     
+        animateElement(button, 700);   
+        animateElement(text, 900);     
+
+        // ------------------ Modal Control Functions ------------------
+        const openModal = () => {
+            modalWrapper.style.display = 'block'; 
+            modalWrapper.style.pointerEvents = 'auto';
+
+            setTimeout(() => {
+                loginModal.style.opacity = '1'; 
+                loginModal.style.transform = 'translate(-50%, -50%)'; 
+            }, 50); 
+        };
+
+        const closeModal = () => {
+            loginModal.style.opacity = '0';
+            loginModal.style.transform = 'translate(-50%, -40%)';
+            
+            modalWrapper.style.pointerEvents = 'none';
+
+            // Use named function to ensure proper removal
+            const handler = function() {
+                modalWrapper.style.display = 'none';
+                loginModal.removeEventListener('transitionend', handler); 
+            };
+            loginModal.addEventListener('transitionend', handler);
+        };
+        
+        // 1. Button click -> Open modal
+        button.addEventListener('click', openModal);
+
+        // 2. Close button click -> Close modal
+        closeModalBtn.addEventListener('click', closeModal);
+
+        // 3. Overlay click -> Close modal
+        modalWrapper.addEventListener('click', (event) => {
+            if (event.target.id === 'modal-wrapper') {
+                closeModal();
+            }
+        });
+
+        // ------------------ Tab Switch Logic (FIXED POINTER-EVENTS) ------------------
+
+        const switchTab = (tabName) => {
+            // Remove 'active' class from both buttons
+            tabLoginBtn.classList.remove('active');
+            tabSignupBtn.classList.remove('active');
+            
+            // Clear messages
+            document.getElementById('login-message').textContent = '';
+            document.getElementById('signup-message').textContent = '';
+
+            if (tabName === 'login') {
+                // Activate login tab button
+                tabLoginBtn.classList.add('active');
+
+                // Pop-off signup form
+                signupForm.style.opacity = '0';
+                signupForm.style.transform = 'scale(0.8)'; 
+                signupForm.style.pointerEvents = 'none'; // FIX: Disable input/click events
+                signupForm.style.zIndex = '5'; // FIX: Lower z-index
+
+                // Pop-in login form
+                setTimeout(() => {
+                    loginForm.style.opacity = '1';
+                    loginForm.style.transform = 'scale(1)'; 
+                    loginForm.style.pointerEvents = 'auto'; // FIX: Enable input/click events
+                    loginForm.style.zIndex = '10'; // FIX: Raise z-index
+                }, 100); 
+
+            } else { // signup
+                // Activate signup tab button
+                tabSignupBtn.classList.add('active');
+
+                // Pop-off login form
+                loginForm.style.opacity = '0';
+                loginForm.style.transform = 'scale(0.8)'; 
+                loginForm.style.pointerEvents = 'none'; // FIX: Disable input/click events
+                loginForm.style.zIndex = '5'; // FIX: Lower z-index
+
+                // Pop-in signup form
+                setTimeout(() => {
+                    signupForm.style.opacity = '1';
+                    signupForm.style.transform = 'scale(1)'; 
+                    signupForm.style.pointerEvents = 'auto'; // FIX: Enable input/click events
+                    signupForm.style.zIndex = '10'; // FIX: Raise z-index
+                }, 100); 
+            }
+        };
+        
+        // Initial state setup (relying on JS for form styles now)
+        loginForm.style.opacity = '1';
+        loginForm.style.transform = 'scale(1)';
+        signupForm.style.opacity = '0';
+        signupForm.style.transform = 'scale(0.8)';
+
+        tabLoginBtn.addEventListener('click', () => switchTab('login'));
+        tabSignupBtn.addEventListener('click', () => switchTab('signup'));
+
+
+        // ------------------ Sign Up Form Submission Logic ------------------
+
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('signup-username').value.trim();
+            const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('signup-confirm-password').value;
+            
+            // =========================================================================
+            // 【⭐ 修复：新增 name 和 handle 字段以满足后端 API 要求 ⭐】
+            const name = username; 
+            const handle = username; 
+            // =========================================================================
+
+            signupMessage.style.color = 'black';
+            signupMessage.textContent = 'Submitting...';
+            
+            if (password !== confirmPassword) {
+                signupMessage.style.color = 'red';
+                signupMessage.textContent = '❌ Password and Confirm Password do not match!';
+                return;
+            }
+
+            try {
+                // Attempt to contact server
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    // 【修改 body】: 发送 username, password, name, handle
+                    body: JSON.stringify({ username, password, name, handle })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) { // Check both response status and success flag
+                    signupMessage.style.color = 'green';
+                    signupMessage.textContent = '✅ Registration successful! Please proceed to login.';
+                    
+                    // Switch to login tab
+                    setTimeout(() => {
+                        switchTab('login');
+                        document.getElementById('login-username').value = username; 
+                        document.getElementById('login-password').focus();
+                    }, 1500);
+
+                } else {
+                    signupMessage.style.color = 'red';
+                    // Use server message or a default failure message
+                    signupMessage.textContent = `❌ Registration failed: ${data.message || 'Server responded with an error.'}`; 
+                }
+
+            } catch (error) {
+                // Fallback for static demo (No backend)
+                console.warn('Backend not found or connection failed:', error);
+                
+                // Simulate successful signup
+                signupMessage.style.color = 'green';
+                signupMessage.textContent = '✅ (Demo Mode) Registration simulated! Redirecting to Login...';
+                
+                setTimeout(() => {
+                    switchTab('login');
+                    // Reset the sign-up form and prefill username on login tab
+                    signupForm.reset(); 
+                    document.getElementById('login-username').value = username; 
+                    document.getElementById('login-password').focus();
+                }, 1500);
+            }
+        });
+
+        // ------------------ Login Form Submission Logic ------------------
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const loginMessage = document.getElementById('login-message');
+            const usernameInput = document.getElementById('login-username').value.trim();
+            const passwordInput = document.getElementById('login-password').value;
+
+
+            if (!usernameInput || !passwordInput) {
+                 loginMessage.style.color = 'red';
+                 loginMessage.textContent = '❌ Please enter username and password.';
+                 return;
+            }
+
+            loginMessage.style.color = 'black';
+            loginMessage.textContent = 'Logging in...';
+
+            try {
+                // Attempt to contact server
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: usernameInput, password: passwordInput })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) { // Check both response status and success flag
+                    loginMessage.style.color = 'green';
+                    loginMessage.textContent = '✅ Login successful! Redirecting...';
+
+                    // Save Username on successful login
+                    localStorage.setItem('currentUser', usernameInput);
+
+                    // Redirect to poSter_home_login page
+                    setTimeout(() => {
+                        window.location.href = 'poSter_home.html'; 
+                    }, 1000);
+
+                } else {
+                    loginMessage.style.color = 'red';
+                    loginMessage.textContent = `❌ Login failed: ${data.message || 'Invalid credentials or server error.'}`; 
+                }
+            } catch (error) {
+                 // Fallback for static demo (No backend)
+                console.warn('Backend not found or connection failed:', error);
+
+                // Simulate successful login
+                loginMessage.style.color = 'green';
+                loginMessage.textContent = '✅ (Demo Mode) Login simulated! Redirecting...';
+
+                localStorage.setItem('currentUser', usernameInput);
+                
+                setTimeout(() => {
+                    window.location.href = 'poSter_home.html'; 
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>

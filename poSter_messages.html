@@ -1,0 +1,3338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - poSter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-color: #62a8a8;
+            --primary-hover: #81c9c9;
+            --shadow-color: rgba(98, 168, 168, 0.3);
+            --background-color: #f4f7fc;
+            --background-light: white;
+            --text-color: #333;
+            --border-radius: 16px;
+            --chat-bubble-other: #f0f0f0;
+            --chat-bubble-self: #62a8a8;
+        }
+        body {
+            background: linear-gradient(135deg, var(--background-color) 0%, #e8f0f5 100%);
+            font-family: 'Open Sans', sans-serif;
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        header {
+            background: var(--background-light);
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(98, 168, 168, 0.1);
+            border-radius: 12px;
+            margin-bottom: 40px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            color: var(--primary-color);
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .header-nav { display: flex; gap: 30px; align-items: center; }
+        .header-nav a {
+            text-decoration: none;
+            color: #666;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+        .header-nav a:hover { color: var(--primary-color); }
+        .header-nav a.active { color: var(--primary-color); }
+        
+        #logoutBtn {
+            background-color: #f0f0f0;
+            color: var(--text-color);
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background-color 0.3s, color 0.3s;
+            font-family: 'Open Sans', sans-serif;
+        }
+        #logoutBtn:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 250px 1fr 300px;
+            gap: 30px;
+        }
+        .sidebar {
+            background: var(--background-light);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+        .sidebar-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            color: var(--text-color);
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        .sidebar-menu { list-style: none; }
+        .sidebar-menu li { margin-bottom: 12px; }
+        .sidebar-menu a {
+            display: block;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: #666;
+            border-radius: 8px;
+            transition: background-color 0.3s, color 0.3s;
+            font-weight: 500;
+        }
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* ========== MESSAGES CONTAINER ========== */
+        .messages-container {
+            background: var(--background-light);
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 10px var(--shadow-color);
+            overflow: hidden;
+            display: flex;
+            height: 600px;
+        }
+        .messages-container .chat-list {
+            width: 340px;
+            min-width: 340px;
+            border-right: 1px solid #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            background: #fafbfc;
+        }
+        .messages-container .chat-list-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+        }
+        .messages-container .chat-list-header h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            color: var(--text-color);
+        }
+        .messages-container .chat-list-header .header-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .messages-container .chat-list-header .header-actions button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            color: #666;
+        }
+        .messages-container .chat-list-header .header-actions button:hover {
+            background: #f0f4f8;
+            color: var(--primary-color);
+        }
+        .messages-container .chat-list-header .count {
+            font-size: 12px;
+            color: #888;
+            background: #f0f0f0;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+        .messages-container .chat-search {
+            padding: 10px 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .messages-container .chat-search input {
+            width: 100%;
+            padding: 7px 12px 7px 34px;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 13px;
+            transition: border-color 0.3s;
+            background: white;
+        }
+        .messages-container .chat-search input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .messages-container .chat-search .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+            font-size: 13px;
+        }
+        .messages-container .chat-search .search-wrapper {
+            position: relative;
+        }
+
+        /* Chat List Items */
+        .chat-list-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px 0;
+        }
+        .chat-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f8f8f8;
+            position: relative;
+        }
+        .chat-item:hover { background: #f0f4f8; }
+        .chat-item.active { background: #e8f0f5; }
+        .chat-item .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 20px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .chat-item .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .chat-item .avatar .group-emoji {
+            font-size: 20px;
+            line-height: 1;
+        }
+        .chat-item .info { flex: 1; min-width: 0; }
+        .chat-item .info .name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-color);
+            display: block;
+        }
+        .chat-item .info .name .group-badge {
+            font-size: 10px;
+            color: #888;
+            background: #f0f0f0;
+            padding: 1px 8px;
+            border-radius: 10px;
+            margin-left: 6px;
+            font-weight: 400;
+        }
+        .chat-item .info .last-msg {
+            font-size: 13px;
+            color: #888;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+        .chat-item .info .last-msg .sender {
+            color: #666;
+            font-weight: 500;
+        }
+        .chat-item .time {
+            font-size: 11px;
+            color: #aaa;
+            flex-shrink: 0;
+            margin-left: 4px;
+        }
+        .chat-item .unread-badge {
+            background: var(--primary-color);
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 20px;
+            flex-shrink: 0;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* ========== CHAT WINDOW ========== */
+        .messages-container .chat-window {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            position: relative;
+        }
+        .chat-window .chat-header {
+            padding: 12px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fafbfc;
+            z-index: 5;
+        }
+        .chat-window .chat-header .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+            flex-shrink: 0;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .chat-window .chat-header .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .chat-window .chat-header .avatar .group-emoji { font-size: 18px; }
+        .chat-window .chat-header .info { flex: 1; cursor: pointer; }
+        .chat-window .chat-header .info .name {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-color);
+            display: block;
+        }
+        .chat-window .chat-header .info .handle {
+            font-size: 12px;
+            color: #888;
+        }
+        .chat-window .chat-header .info .member-count {
+            font-size: 11px;
+            color: #aaa;
+        }
+        .chat-window .chat-header .back-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: #666;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .chat-window .chat-header .back-btn:hover { background: #f0f0f0; }
+
+        /* ========== GROUP SETTINGS BUTTON ========== */
+        .chat-window .chat-header .group-settings-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            color: #666;
+        }
+        .chat-window .chat-header .group-settings-btn:hover {
+            background: #f0f0f0;
+            color: var(--primary-color);
+        }
+
+        /* Messages Area */
+        .chat-window .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background: #f8fafc;
+            position: relative;
+        }
+        .chat-window .messages-area .empty-msg {
+            text-align: center;
+            color: #aaa;
+            padding: 40px 0;
+            font-size: 15px;
+        }
+
+        /* ========== MESSAGE WRAPPER with Avatar ========== */
+        .message-wrapper {
+            display: flex;
+            gap: 10px;
+            max-width: 80%;
+            animation: fadeIn 0.2s ease-out;
+            align-items: flex-start;
+        }
+        .message-wrapper.self {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        .message-wrapper.other {
+            align-self: flex-start;
+            flex-direction: row;
+        }
+        .message-wrapper .msg-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+            overflow: hidden;
+            margin-top: 2px;
+        }
+        .message-wrapper .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .message-wrapper.self .msg-avatar { display: none; }
+        .message-wrapper .msg-content { display: flex; flex-direction: column; max-width: 100%; }
+        .message-wrapper .msg-sender {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 2px;
+            padding-left: 4px;
+        }
+        .message-wrapper.self .msg-sender { display: none; }
+
+        .message-bubble {
+            padding: 8px 14px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            position: relative;
+            cursor: default;
+        }
+        .message-wrapper.self .message-bubble {
+            background: var(--chat-bubble-self);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .message-wrapper.other .message-bubble {
+            background: var(--chat-bubble-other);
+            color: var(--text-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-bubble .msg-time {
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 4px;
+            display: block;
+            text-align: right;
+        }
+        .message-wrapper.other .message-bubble .msg-time { color: #888; }
+        .message-wrapper.self .message-bubble .msg-time { color: rgba(255,255,255,0.8); }
+
+        .message-bubble .mention {
+            color: #1da1f2;
+            font-weight: 700;
+            background: rgba(29, 161, 242, 0.12);
+            padding: 0 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .message-bubble .mention:hover { background: rgba(29, 161, 242, 0.25); }
+        .message-wrapper.self .message-bubble .mention {
+            color: #a8d8ff;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .message-wrapper.self .message-bubble .mention:hover { background: rgba(255, 255, 255, 0.25); }
+        .message-bubble .mention-invalid {
+            color: inherit;
+            font-weight: normal;
+            background: none;
+            cursor: default;
+        }
+
+        .message-bubble .reply-indicator {
+            font-size: 12px;
+            opacity: 0.8;
+            padding: 4px 8px;
+            background: rgba(0,0,0,0.06);
+            border-radius: 6px;
+            margin-bottom: 4px;
+            border-left: 3px solid var(--primary-color);
+            display: block;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .message-bubble .reply-indicator:hover { background: rgba(0,0,0,0.12); }
+        .message-wrapper.self .message-bubble .reply-indicator {
+            background: rgba(255,255,255,0.1);
+            border-left-color: rgba(255,255,255,0.5);
+        }
+        .message-wrapper.self .message-bubble .reply-indicator:hover { background: rgba(255,255,255,0.2); }
+
+        /* ========== MESSAGE INPUT ========== */
+        .chat-window .message-input-area {
+            padding: 12px 20px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            gap: 10px;
+            background: white;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .chat-window .message-input-area .input-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+        .chat-window .message-input-area .reply-preview {
+            font-size: 13px;
+            color: #666;
+            background: #f5f7f9;
+            padding: 6px 12px;
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+        .chat-window .message-input-area .reply-preview .reply-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .chat-window .message-input-area .reply-preview .cancel-reply {
+            cursor: pointer;
+            color: #dc3545;
+            font-weight: 600;
+            font-size: 16px;
+            padding: 0 4px;
+            flex-shrink: 0;
+        }
+        .chat-window .message-input-area .reply-preview .cancel-reply:hover { opacity: 0.7; }
+        .chat-window .message-input-area input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 24px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            background: #fafbfc;
+            min-width: 0;
+        }
+        .chat-window .message-input-area input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: white;
+        }
+        .chat-window .message-input-area .send-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Open Sans', sans-serif;
+            white-space: nowrap;
+            box-shadow: 0 2px 12px rgba(98, 168, 168, 0.3);
+        }
+        .chat-window .message-input-area .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(98, 168, 168, 0.4);
+        }
+        .chat-window .message-input-area .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ========== @ Mention Suggestions ========== */
+        .mention-suggestions {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            padding: 6px 0;
+            min-width: 180px;
+            max-height: 150px;
+            overflow-y: auto;
+            display: none;
+            z-index: 100;
+            border: 1px solid #f0f0f0;
+            margin-bottom: 8px;
+        }
+        .mention-suggestions .suggestion-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-color);
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .mention-suggestions .suggestion-item:hover { background: #f0f4f8; }
+        .mention-suggestions .suggestion-item .handle { color: #888; }
+
+        /* ========== CREATE GROUP MODAL - 美化版 ========== */
+        #createGroupModal .modal {
+            max-width: 480px;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        #createGroupModal .modal-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+            padding: 22px 28px;
+            border-bottom: none;
+            border-radius: 0;
+        }
+
+        #createGroupModal .modal-header .modal-title {
+            color: white;
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #createGroupModal .modal-header .modal-title .title-icon {
+            font-size: 26px;
+        }
+
+        #createGroupModal .modal-header .modal-title .title-sub {
+            font-size: 13px;
+            font-weight: 400;
+            opacity: 0.8;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        #createGroupModal .modal-header .close-btn {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 28px;
+            transition: all 0.3s;
+        }
+
+        #createGroupModal .modal-header .close-btn:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+        }
+
+        #createGroupModal .modal-body {
+            padding: 28px 28px 32px;
+            background: #f9fbfc;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        #createGroupModal .form-group {
+            margin-bottom: 20px;
+        }
+
+        #createGroupModal .form-group:last-of-type {
+            margin-bottom: 24px;
+        }
+
+        #createGroupModal .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+        }
+
+        #createGroupModal .form-group label .label-icon {
+            margin-right: 6px;
+        }
+
+        #createGroupModal .form-group input[type="text"] {
+            width: 100%;
+            padding: 11px 16px;
+            border: 2px solid #e8ecf0;
+            border-radius: 12px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: white;
+            color: var(--text-color);
+        }
+
+        #createGroupModal .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(98, 168, 168, 0.1);
+        }
+
+        #createGroupModal .form-group input[type="text"]::placeholder {
+            color: #aaa;
+        }
+
+        /* Emoji Row */
+        #createGroupModal .form-group .emoji-input-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        #createGroupModal .form-group .emoji-input-row .selected-emoji-display {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            flex-shrink: 0;
+            border: 2px solid white;
+            box-shadow: 0 2px 10px rgba(98, 168, 168, 0.2);
+        }
+
+        #createGroupModal .form-group .emoji-input-row .emoji-picker-small {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            background: white;
+            padding: 6px 10px;
+            border-radius: 12px;
+            border: 2px solid #e8ecf0;
+            flex: 1;
+        }
+
+        #createGroupModal .form-group .emoji-input-row .emoji-picker-small span {
+            font-size: 22px;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            line-height: 1.2;
+        }
+
+        #createGroupModal .form-group .emoji-input-row .emoji-picker-small span:hover {
+            background: #f0f4f8;
+            transform: scale(1.15);
+        }
+
+        #createGroupModal .form-group .emoji-input-row .emoji-picker-small span.active {
+            background: #e8f0f5;
+            transform: scale(1.1);
+        }
+
+        /* Selected Members */
+        #createGroupModal .selected-members {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px 0 4px 0;
+            min-height: 36px;
+        }
+
+        #createGroupModal .selected-members .member-tag {
+            background: linear-gradient(135deg, #e8f0f5, #d5e4ec);
+            color: var(--primary-color);
+            padding: 5px 12px 5px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            animation: tagPopIn 0.25s ease-out;
+            box-shadow: 0 2px 6px rgba(98, 168, 168, 0.08);
+        }
+
+        @keyframes tagPopIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        #createGroupModal .selected-members .member-tag .remove {
+            cursor: pointer;
+            color: #999;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.2s;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        #createGroupModal .selected-members .member-tag .remove:hover {
+            color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        /* Member Search */
+        #createGroupModal .member-search-wrapper {
+            position: relative;
+        }
+
+        #createGroupModal .member-search-wrapper .search-icon-small {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        #createGroupModal .member-search-wrapper input {
+            padding-left: 40px !important;
+        }
+
+        #createGroupModal .member-search-results {
+            max-height: 160px;
+            overflow-y: auto;
+            border: 2px solid #e8ecf0;
+            border-radius: 12px;
+            margin-top: 6px;
+            background: white;
+            display: none;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        #createGroupModal .member-search-results .result-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            border-bottom: 1px solid #f5f7f9;
+        }
+
+        #createGroupModal .member-search-results .result-item:last-child {
+            border-bottom: none;
+        }
+
+        #createGroupModal .member-search-results .result-item:hover {
+            background: #f0f4f8;
+        }
+
+        #createGroupModal .member-search-results .result-item .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 12px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        #createGroupModal .member-search-results .result-item .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #createGroupModal .member-search-results .result-item .result-name {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        #createGroupModal .member-search-results .result-item .result-handle {
+            color: #888;
+            font-size: 13px;
+        }
+
+        #createGroupModal .member-search-results .result-item .add-badge {
+            margin-left: auto;
+            background: var(--primary-color);
+            color: white;
+            font-size: 12px;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        #createGroupModal .member-search-results .result-item:hover .add-badge {
+            opacity: 1;
+        }
+
+        #createGroupModal .member-search-results .empty-result {
+            padding: 16px 14px;
+            color: #888;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        /* Error Message */
+        #createGroupModal .error-msg {
+            color: #dc3545;
+            font-size: 13px;
+            margin-top: 6px;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #createGroupModal .error-msg .error-icon {
+            font-size: 16px;
+        }
+
+        /* Create Button */
+        #createGroupModal .create-group-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Open Sans', sans-serif;
+            margin-top: 4px;
+            box-shadow: 0 4px 20px rgba(98, 168, 168, 0.3);
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #createGroupModal .create-group-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(98, 168, 168, 0.4);
+        }
+
+        #createGroupModal .create-group-btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        #createGroupModal .create-group-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #createGroupModal .create-group-btn .btn-icon {
+            font-size: 18px;
+        }
+
+        /* Group Info Preview */
+        #createGroupModal .group-preview {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 12px;
+            border: 2px dashed #d5e4ec;
+            margin-bottom: 18px;
+        }
+
+        #createGroupModal .group-preview .preview-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        #createGroupModal .group-preview .preview-info {
+            flex: 1;
+        }
+
+        #createGroupModal .group-preview .preview-info .preview-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        #createGroupModal .group-preview .preview-info .preview-members {
+            font-size: 13px;
+            color: #888;
+        }
+
+        /* ========== RIGHT SIDEBAR ========== */
+        .right-sidebar {
+            background: var(--background-light);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+        .right-sidebar-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            color: var(--text-color);
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        .suggested-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .suggested-user:last-child { border-bottom: none; }
+        .suggested-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            flex-shrink: 0;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .suggested-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .suggested-info { flex-grow: 1; cursor: pointer; }
+        .suggested-name { font-size: 14px; font-weight: 700; color: var(--text-color); display: block; }
+        .suggested-name:hover { color: var(--primary-color); }
+        .suggested-handle { font-size: 12px; color: #888; }
+        .suggested-user .btn {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Open Sans', sans-serif;
+        }
+        .suggested-user .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+        }
+        .suggested-user .btn-primary:hover { transform: translateY(-1px); }
+
+        /* ========== GROUP SETTINGS MODAL ========== */
+        #groupSettingsModal .modal {
+            max-width: 520px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        #groupSettingsModal .modal-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+            padding: 20px 24px;
+            border-bottom: none;
+            border-radius: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #groupSettingsModal .modal-header .modal-title {
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #groupSettingsModal .modal-header .modal-title .title-icon {
+            font-size: 22px;
+        }
+
+        #groupSettingsModal .modal-header .close-btn {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 28px;
+            transition: all 0.3s;
+        }
+
+        #groupSettingsModal .modal-header .close-btn:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+        }
+
+        #groupSettingsModal .modal-body {
+            padding: 20px 24px 24px;
+            background: #f9fbfc;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .settings-section {
+            margin-bottom: 24px;
+        }
+
+        .settings-section .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #555;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid #eef2f5;
+            padding-bottom: 8px;
+        }
+
+        .settings-section .section-title .section-icon {
+            font-size: 16px;
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 1px solid #eef2f5;
+            transition: all 0.2s;
+        }
+
+        .settings-row:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 8px rgba(98, 168, 168, 0.08);
+        }
+
+        .settings-row .row-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .settings-row .row-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .settings-row .row-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .settings-row .row-info .row-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .settings-row .row-info .row-handle {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .settings-row .row-info .row-badge {
+            font-size: 10px;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+
+        .settings-row .row-info .row-badge.owner {
+            background: #ffd700;
+            color: #333;
+        }
+
+        .settings-row .row-info .row-badge.admin {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .settings-row .row-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .settings-row .row-actions .action-btn-sm {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 14px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        .settings-row .row-actions .action-btn-sm.btn-admin {
+            background: #e8f0f5;
+            color: var(--primary-color);
+        }
+
+        .settings-row .row-actions .action-btn-sm.btn-admin:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .settings-row .row-actions .action-btn-sm.btn-admin.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .settings-row .row-actions .action-btn-sm.btn-remove {
+            background: #ffe6e6;
+            color: #dc3545;
+        }
+
+        .settings-row .row-actions .action-btn-sm.btn-remove:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        .settings-row .row-actions .action-btn-sm.btn-transfer {
+            background: #fff3e6;
+            color: #e67e22;
+        }
+
+        .settings-row .row-actions .action-btn-sm.btn-transfer:hover {
+            background: #e67e22;
+            color: white;
+        }
+
+        .settings-row .row-actions .action-btn-sm.btn-leave {
+            background: #ffe6e6;
+            color: #dc3545;
+        }
+
+        .settings-row .row-actions .action-btn-sm.btn-leave:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        .settings-row .row-actions .action-btn-sm.btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .settings-row .row-actions .action-btn-sm.btn-delete:hover {
+            background: #c0392b;
+        }
+
+        .settings-row .row-actions .action-btn-sm:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Group info edit fields */
+        .group-info-edit {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: white;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #eef2f5;
+        }
+
+        .group-info-edit input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #e8ecf0;
+            border-radius: 8px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            min-width: 100px;
+        }
+
+        .group-info-edit input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .group-info-edit .emoji-picker-mini {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .group-info-edit .emoji-picker-mini span {
+            font-size: 20px;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .group-info-edit .emoji-picker-mini span:hover {
+            background: #f0f4f8;
+        }
+
+        .group-info-edit .emoji-picker-mini span.active {
+            background: #e8f0f5;
+        }
+
+        .group-info-edit .save-info-btn {
+            padding: 8px 18px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        .group-info-edit .save-info-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .settings-divider {
+            border: none;
+            border-top: 2px dashed #eef2f5;
+            margin: 16px 0;
+        }
+
+        /* ========== MODAL ========== */
+        .modal-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.55);
+            display: none;
+            z-index: 2000;
+            overflow-y: auto;
+            backdrop-filter: blur(4px);
+        }
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 92%;
+            max-width: 560px;
+            background: var(--background-light);
+            border-radius: 20px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            max-height: 92vh;
+        }
+        .modal-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fafcfc;
+        }
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #999;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        
+        .close-btn:hover { 
+            color: #333; 
+            background: #f0f0f0; 
+        }
+
+        .modal-body { padding: 20px 24px 24px; overflow-y: auto; max-height: calc(92vh - 80px); }
+
+        /* ========== EMPTY / LOADING ========== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-state .title { font-size: 18px; font-weight: 700; color: var(--text-color); margin-bottom: 6px; }
+        .empty-state .text { font-size: 14px; color: #aaa; }
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--primary-color);
+        }
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f0f0f0;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ========== NOTIFICATION ========== */
+        .notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            animation: slideInRight 0.3s ease-out;
+            z-index: 3000;
+            max-width: 90vw;
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .notification.error { background: #dc3545; }
+
+        /* ========== CONTEXT MENU ========== */
+        .context-menu {
+            position: fixed;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            padding: 6px 0;
+            min-width: 150px;
+            z-index: 1000;
+            display: none;
+            border: 1px solid #f0f0f0;
+        }
+        .context-menu .menu-item {
+            padding: 8px 18px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-color);
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .context-menu .menu-item:hover { background: #f0f4f8; }
+        .context-menu .menu-item .icon { font-size: 16px; }
+        .context-menu .menu-item.danger { color: #dc3545; }
+        .context-menu .menu-item.danger:hover { background: #ffe6e6; }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1024px) {
+            .main-container { grid-template-columns: 1fr 300px; }
+            .sidebar { display: none; }
+        }
+        @media (max-width: 768px) {
+            header { flex-direction: column; gap: 15px; }
+            .header-nav { gap: 15px; flex-wrap: wrap; justify-content: center; }
+            .main-container { grid-template-columns: 1fr; }
+            .right-sidebar { display: none; }
+            .messages-container { height: calc(100vh - 200px); flex-direction: column; }
+            .messages-container .chat-list { width: 100%; min-width: auto; border-right: none; max-height: 100%; }
+            .messages-container .chat-list .chat-list-items { max-height: none; }
+            .messages-container .chat-window { display: none; }
+            .messages-container .chat-window.active { display: flex; height: 100%; }
+            .messages-container .chat-window .chat-header .back-btn { display: block; }
+            .chat-window .messages-area { padding: 12px 14px; }
+            .message-wrapper { max-width: 90%; }
+            .context-menu { min-width: 130px; }
+            .mention-suggestions { min-width: 150px; }
+            #createGroupModal .modal { max-width: 96%; }
+            #createGroupModal .modal-body { padding: 20px; }
+            #createGroupModal .form-group .emoji-input-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            #createGroupModal .form-group .emoji-input-row .emoji-picker-small {
+                justify-content: center;
+            }
+            #createGroupModal .modal-header .modal-title {
+                font-size: 18px;
+            }
+            #groupSettingsModal .modal { max-width: 96%; }
+            #groupSettingsModal .modal-body { padding: 16px; }
+            .settings-row { flex-wrap: wrap; }
+            .settings-row .row-actions { width: 100%; justify-content: flex-end; margin-top: 4px; }
+            .group-info-edit { flex-direction: column; align-items: stretch; }
+            .group-info-edit .emoji-picker-mini { justify-content: center; }
+        }
+        @media (max-width: 480px) {
+            #createGroupModal .modal { max-width: 98%; border-radius: 14px; }
+            #createGroupModal .modal-header { padding: 14px 16px; }
+            #createGroupModal .modal-body { padding: 14px; }
+            #createGroupModal .selected-members .member-tag {
+                font-size: 12px;
+                padding: 4px 10px 4px 12px;
+            }
+            #groupSettingsModal .modal { max-width: 98%; border-radius: 14px; }
+            #groupSettingsModal .modal-header { padding: 14px 16px; }
+            #groupSettingsModal .modal-body { padding: 12px; }
+            .settings-row { padding: 8px 10px; }
+            .settings-row .row-avatar { width: 30px; height: 30px; font-size: 12px; }
+        }
+        @media (min-width: 769px) {
+            .messages-container .chat-window { display: flex !important; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="poSter_home.html" class="header-logo">poSter</a>
+        <nav class="header-nav">
+            <a href="poSter_home.html">Home</a>
+            <a href="poSter_friends.html">Friends</a>
+            <a href="poSter_messages.html" class="active">Messages</a>
+            <a href="#notifications">Notifications</a>
+        </nav>
+        <button class="btn" id="logoutBtn">Logout</button>
+    </header>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="sidebar-title">Menu</div>
+            <ul class="sidebar-menu">
+                <li><a href="poSter_home.html">📰 Home</a></li>
+                <li><a href="poSter_friends.html">👥 Friends</a></li>
+                <li><a href="poSter_messages.html" class="active">💬 Messages</a></li>
+                <li><a href="poSter_profile.html">👤 Profile</a></li>
+            </ul>
+        </aside>
+
+        <div class="messages-container" id="messagesContainer">
+            <!-- Chat List -->
+            <div class="chat-list" id="chatList">
+                <div class="chat-list-header">
+                    <h3>💬 Messages</h3>
+                    <div class="header-actions">
+                        <button id="createGroupBtn" title="Create Group">👥</button>
+                        <span class="count" id="chatCount">0</span>
+                    </div>
+                </div>
+                <div class="chat-search">
+                    <div class="search-wrapper">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="chatSearchInput" placeholder="Search conversations...">
+                    </div>
+                </div>
+                <div class="chat-list-items" id="chatListItems">
+                    <div class="loading"><div class="spinner"></div></div>
+                </div>
+            </div>
+
+            <!-- Chat Window -->
+            <div class="chat-window" id="chatWindow">
+                <div class="chat-header" id="chatHeader">
+                    <button class="back-btn" id="backBtn">‹</button>
+                    <div class="avatar" id="chatAvatar">?</div>
+                    <div class="info" id="chatUserInfo">
+                        <span class="name" id="chatUserName">Select a chat</span>
+                        <span class="handle" id="chatUserHandle"></span>
+                    </div>
+                    <button class="group-settings-btn" id="groupSettingsBtn" style="display:none;" title="Group Settings">⚙️</button>
+                </div>
+                <div class="messages-area" id="messagesArea">
+                    <div class="empty-msg">Select a conversation to start chatting</div>
+                </div>
+                <div class="message-input-area" id="messageInputArea">
+                    <div class="input-wrapper">
+                        <div class="reply-preview" id="replyPreview">
+                            <span class="reply-text">↩️ Replying to: <span id="replyPreviewText"></span></span>
+                            <span class="cancel-reply" id="cancelReplyBtn">✕</span>
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center; width:100%; position:relative;">
+                            <input type="text" id="messageInput" placeholder="Type a message..." disabled>
+                            <button class="send-btn" id="sendBtn" disabled>Send</button>
+                            <div class="mention-suggestions" id="mentionSuggestions"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <aside class="right-sidebar">
+            <div class="right-sidebar-title">Suggested Users</div>
+            <div id="suggestedUsers"><div class="loading"><div class="spinner"></div></div></div>
+        </aside>
+    </div>
+
+    <!-- Create Group Modal -->
+    <div class="modal-wrapper" id="createGroupModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="title-icon">👥</span>
+                    Create Group
+                    <span class="title-sub">· Start a group chat</span>
+                </div>
+                <button class="close-btn" id="closeGroupModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Group Preview -->
+                <div class="group-preview" id="groupPreview">
+                    <div class="preview-avatar" id="previewAvatar">👥</div>
+                    <div class="preview-info">
+                        <div class="preview-name" id="previewName">Group Name</div>
+                        <div class="preview-members" id="previewMembers">0 members</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><span class="label-icon">📝</span> Group Name</label>
+                    <input type="text" id="groupNameInput" placeholder="e.g. Weekend Trip" maxlength="30">
+                </div>
+
+                <div class="form-group">
+                    <label><span class="label-icon">🎨</span> Group Emoji</label>
+                    <div class="emoji-input-row">
+                        <div class="selected-emoji-display" id="selectedEmojiDisplay">👥</div>
+                        <div class="emoji-picker-small" id="emojiPickerSmall">
+                            <span data-emoji="✈️">✈️</span>
+                            <span data-emoji="🎮">🎮</span>
+                            <span data-emoji="📚">📚</span>
+                            <span data-emoji="🍕">🍕</span>
+                            <span data-emoji="🏖️">🏖️</span>
+                            <span data-emoji="🎵">🎵</span>
+                            <span data-emoji="💻">💻</span>
+                            <span data-emoji="🎯">🎯</span>
+                            <span data-emoji="🚀">🚀</span>
+                            <span data-emoji="🌈">🌈</span>
+                            <span data-emoji="🎨">🎨</span>
+                            <span data-emoji="⚽">⚽</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><span class="label-icon">👤</span> Add Members</label>
+                    <div class="member-search-wrapper">
+                        <span class="search-icon-small">🔍</span>
+                        <input type="text" id="memberSearchInput" placeholder="Search friends by name...">
+                    </div>
+                    <div class="member-search-results" id="memberSearchResults"></div>
+                    <div class="selected-members" id="selectedMembers"></div>
+                    <div class="error-msg" id="groupErrorMsg">
+                        <span class="error-icon">⚠️</span>
+                        Please select at least 2 friends.
+                    </div>
+                </div>
+
+                <button class="create-group-btn" id="createGroupSubmitBtn">
+                    <span class="btn-icon">🚀</span> Create Group
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Group Settings Modal -->
+    <div class="modal-wrapper" id="groupSettingsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="title-icon">⚙️</span>
+                    Group Settings
+                </div>
+                <button class="close-btn" id="closeGroupSettingsBtn">&times;</button>
+            </div>
+            <div class="modal-body" id="groupSettingsBody">
+                <div class="loading"><div class="spinner"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <div class="menu-item" data-action="reply"><span class="icon">↩️</span> Reply</div>
+        <div class="menu-item" data-action="edit"><span class="icon">✏️</span> Edit</div>
+        <div class="menu-item danger" data-action="delete"><span class="icon">🗑️</span> Delete</div>
+    </div>
+
+    <script>
+        const currentUser = localStorage.getItem('currentUser');
+        let allChats = [];
+        let filteredChats = [];
+        let currentChatId = null;
+        let currentChatType = null;
+        let currentMessages = [];
+        let suggestedUsers = [];
+        let searchQuery = '';
+        let pollingInterval = null;
+        let previousChatsData = '';
+        let replyingTo = null;
+        let contextMenuTarget = null;
+        let allUsernames = [];
+        let userAvatarMap = {};
+        let friendsList = [];
+        let selectedMembers = [];
+        let selectedEmoji = '👥';
+
+        // DOM Elements
+        const chatListItems = document.getElementById('chatListItems');
+        const chatCount = document.getElementById('chatCount');
+        const chatSearchInput = document.getElementById('chatSearchInput');
+        const chatWindow = document.getElementById('chatWindow');
+        const messagesArea = document.getElementById('messagesArea');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const backBtn = document.getElementById('backBtn');
+        const chatAvatar = document.getElementById('chatAvatar');
+        const chatUserName = document.getElementById('chatUserName');
+        const chatUserHandle = document.getElementById('chatUserHandle');
+        const suggestedUsersContainer = document.getElementById('suggestedUsers');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const contextMenu = document.getElementById('contextMenu');
+        const replyPreview = document.getElementById('replyPreview');
+        const replyPreviewText = document.getElementById('replyPreviewText');
+        const cancelReplyBtn = document.getElementById('cancelReplyBtn');
+        const mentionSuggestions = document.getElementById('mentionSuggestions');
+        const createGroupBtn = document.getElementById('createGroupBtn');
+        const createGroupModal = document.getElementById('createGroupModal');
+        const closeGroupModalBtn = document.getElementById('closeGroupModalBtn');
+        const groupNameInput = document.getElementById('groupNameInput');
+        const memberSearchInput = document.getElementById('memberSearchInput');
+        const memberSearchResults = document.getElementById('memberSearchResults');
+        const selectedMembersContainer = document.getElementById('selectedMembers');
+        const createGroupSubmitBtn = document.getElementById('createGroupSubmitBtn');
+        const groupErrorMsg = document.getElementById('groupErrorMsg');
+        const previewName = document.getElementById('previewName');
+        const previewMembers = document.getElementById('previewMembers');
+        const previewAvatar = document.getElementById('previewAvatar');
+        const selectedEmojiDisplay = document.getElementById('selectedEmojiDisplay');
+        const emojiPickerSmall = document.getElementById('emojiPickerSmall');
+        const groupSettingsBtn = document.getElementById('groupSettingsBtn');
+        const groupSettingsModal = document.getElementById('groupSettingsModal');
+        const closeGroupSettingsBtn = document.getElementById('closeGroupSettingsBtn');
+        const groupSettingsBody = document.getElementById('groupSettingsBody');
+
+        // ========== Helper Functions ==========
+        function showNotification(message, type = 'primary') {
+            const notification = document.createElement('div');
+            notification.className = 'notification' + (type === 'error' ? ' error' : '');
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => { notification.remove(); }, 3000);
+        }
+
+        function getInitials(name) {
+            return name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?';
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            if (diff < 60000) return 'just now';
+            if (diff < 3600000) return Math.floor(diff / 60000) + 'm';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + 'h';
+            if (diff < 604800000) return Math.floor(diff / 86400000) + 'd';
+            return date.toLocaleDateString();
+        }
+
+        function formatTimeFull(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function isGroupChat(chatId) {
+            return chatId && chatId.startsWith('group_');
+        }
+
+        function getDisplayName(chat) {
+            if (chat.type === 'group') {
+                return chat.name || 'Group Chat';
+            }
+            return chat.name || chat.partner || 'Unknown';
+        }
+
+        function getDisplayHandle(chat) {
+            if (chat.type === 'group') {
+                return `${chat.participants ? chat.participants.length : 0} members`;
+            }
+            return chat.handle ? '@' + chat.handle : '';
+        }
+
+        function getAvatarHtml(chat) {
+            if (chat.type === 'group') {
+                const emoji = chat.emoji || '👥';
+                return `<span class="group-emoji">${emoji}</span>`;
+            }
+            if (chat.avatar) {
+                return `<img src="${chat.avatar}" alt="${chat.name}">`;
+            }
+            return getInitials(chat.name || chat.partner);
+        }
+
+        // ========== Parse @mentions ==========
+        function parseMentions(text, participants = []) {
+            // 处理 @所有人
+            let processedText = text;
+            if (processedText.includes('@所有人') || processedText.includes('@everyone')) {
+                const everyoneMention = '<span class="mention" data-mention="everyone">@所有人</span>';
+                processedText = processedText.replace(/@所有人/g, everyoneMention);
+                processedText = processedText.replace(/@everyone/g, everyoneMention);
+            }
+            
+            // 处理普通 @username
+            return processedText.replace(/@(\w+)/g, (match, username) => {
+                if (allUsernames.includes(username)) {
+                    return `<span class="mention" data-mention="${username}">@${username}</span>`;
+                } else {
+                    return `<span class="mention-invalid">@${username}</span>`;
+                }
+            });
+        }
+
+        // ========== Load User Data ==========
+        async function loadAllUsernames() {
+            try {
+                const response = await fetch('/api/users/list');
+                const data = await response.json();
+                if (data.success) {
+                    allUsernames = data.users.map(u => u.username);
+                }
+            } catch (error) {
+                console.error('Error loading usernames:', error);
+            }
+        }
+
+        async function loadUserAvatars() {
+            try {
+                const response = await fetch('/api/users/avatars');
+                const data = await response.json();
+                if (data.success) {
+                    userAvatarMap = {};
+                    data.users.forEach(u => {
+                        userAvatarMap[u.username] = u.avatar || '';
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading user avatars:', error);
+            }
+        }
+
+        async function loadFriends() {
+            try {
+                const response = await fetch('/api/profile/list?type=following&username=' + encodeURIComponent(currentUser));
+                const data = await response.json();
+                if (data.success && data.users) {
+                    friendsList = data.users;
+                }
+            } catch (error) {
+                console.error('Error loading friends:', error);
+            }
+        }
+
+        // ========== Render single message ==========
+        function renderMessage(msg, isSelf, participants = []) {
+            let avatarUrl = msg.avatar || userAvatarMap[msg.sender] || '';
+            const avatarHtml = avatarUrl 
+                ? `<img src="${avatarUrl}" alt="${msg.sender}">` 
+                : getInitials(msg.sender);
+            
+            let html = `<div class="message-wrapper ${isSelf ? 'self' : 'other'}" data-message-id="${msg.id}">`;
+            html += `<div class="msg-avatar">${avatarHtml}</div>`;
+            html += `<div class="msg-content">`;
+            if (!isSelf) {
+                html += `<div class="msg-sender">${msg.sender}</div>`;
+            }
+            
+            if (msg.replyTo) {
+                const replyText = msg.replyTo.text || '';
+                const replySender = msg.replyTo.sender || 'Unknown';
+                const replyId = msg.replyTo.id;
+                html += `<div class="message-bubble">
+                    <span class="reply-indicator" data-reply-id="${replyId}" onclick="scrollToMessage(${replyId})">
+                        ↩️ Replying to <strong>${replySender}</strong>: ${replyText.substring(0, 50)}${replyText.length > 50 ? '...' : ''}
+                    </span>
+                    ${parseMentions(msg.text, participants)}
+                    <span class="msg-time">${formatTimeFull(msg.timestamp)}</span>
+                </div>`;
+            } else {
+                html += `<div class="message-bubble">
+                    ${parseMentions(msg.text, participants)}
+                    <span class="msg-time">${formatTimeFull(msg.timestamp)}</span>
+                </div>`;
+            }
+            
+            html += `</div></div>`;
+            return html;
+        }
+
+        function scrollToMessage(messageId) {
+            const target = document.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const bubble = target.querySelector('.message-bubble');
+                if (bubble) {
+                    bubble.style.transition = 'background 0.3s';
+                    bubble.style.background = 'rgba(29, 161, 242, 0.15)';
+                    setTimeout(() => { bubble.style.background = ''; }, 1500);
+                }
+            } else {
+                showNotification('Message not found in this conversation.', 'error');
+            }
+        }
+        window.scrollToMessage = scrollToMessage;
+
+        // ========== Load Chats ==========
+        async function loadChats() {
+            if (!currentUser) { window.location.href = 'poSter.html'; return; }
+
+            try {
+                const response = await fetch('/api/messages/list?username=' + encodeURIComponent(currentUser));
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    const newDataHash = JSON.stringify(data.chats);
+                    
+                    if (newDataHash === previousChatsData && currentChatId) {
+                        const chat = data.chats.find(c => c.id === currentChatId);
+                        if (chat) {
+                            const newMessages = chat.messages || [];
+                            if (newMessages.length !== currentMessages.length) {
+                                currentMessages = newMessages;
+                                renderMessages(currentMessages, chat.participants);
+                            }
+                            updateUnreadBadges(data.chats);
+                        }
+                        return;
+                    }
+                    previousChatsData = newDataHash;
+
+                    allChats = data.chats || [];
+                    filteredChats = [...allChats];
+                    renderChatList(filteredChats);
+                    chatCount.textContent = allChats.length;
+
+                    if (currentChatId) {
+                        const chat = allChats.find(c => c.id === currentChatId);
+                        if (chat) {
+                            currentMessages = chat.messages || [];
+                            renderMessages(currentMessages, chat.participants);
+                            markAsRead(currentChatId);
+                            updateChatHeader(chat);
+                            // 显示或隐藏群设置按钮
+                            if (chat.type === 'group') {
+                                groupSettingsBtn.style.display = 'block';
+                            } else {
+                                groupSettingsBtn.style.display = 'none';
+                            }
+                        } else {
+                            currentChatId = null;
+                            currentChatType = null;
+                            currentMessages = [];
+                            showEmptyChatState();
+                            groupSettingsBtn.style.display = 'none';
+                        }
+                    } else {
+                        groupSettingsBtn.style.display = 'none';
+                    }
+                } else {
+                    allChats = [];
+                    filteredChats = [];
+                    renderChatList([]);
+                    groupSettingsBtn.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading chats:', error);
+                showNotification('Error loading messages.', 'error');
+            }
+        }
+
+        function updateUnreadBadges(chats) {
+            const chatItems = document.querySelectorAll('.chat-item');
+            chatItems.forEach(item => {
+                const chatId = item.dataset.chatId;
+                const chat = chats.find(c => c.id === chatId);
+                if (chat) {
+                    const unreadCount = chat.unreadCount || 0;
+                    let badge = item.querySelector('.unread-badge');
+                    if (unreadCount > 0) {
+                        if (badge) { badge.textContent = unreadCount; }
+                        else {
+                            badge = document.createElement('div');
+                            badge.className = 'unread-badge';
+                            badge.textContent = unreadCount;
+                            item.appendChild(badge);
+                        }
+                    } else {
+                        if (badge) badge.remove();
+                    }
+                }
+            });
+        }
+
+        function updateChatHeader(chat) {
+            const avatarHtml = getAvatarHtml(chat);
+            chatAvatar.innerHTML = avatarHtml;
+            chatUserName.textContent = getDisplayName(chat);
+            chatUserHandle.textContent = getDisplayHandle(chat);
+            
+            if (chat.type === 'group') {
+                chatUserHandle.textContent = `${chat.participants ? chat.participants.length : 0} members`;
+                groupSettingsBtn.style.display = 'block';
+            } else {
+                chatUserHandle.textContent = chat.handle ? '@' + chat.handle : '';
+                groupSettingsBtn.style.display = 'none';
+            }
+        }
+
+        // ========== Render Chat List ==========
+        function renderChatList(chats) {
+            if (chats.length === 0) {
+                chatListItems.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">💬</div>
+                        <div class="title">No conversations yet</div>
+                        <div class="text">Start chatting with your friends or create a group!</div>
+                    </div>
+                `;
+                return;
+            }
+
+            chatListItems.innerHTML = chats.map(chat => {
+                const avatarHtml = getAvatarHtml(chat);
+                const displayName = getDisplayName(chat);
+                const displayHandle = getDisplayHandle(chat);
+                const lastMsg = chat.lastMessage || '';
+                const lastMsgSender = chat.lastSender === currentUser ? 'You' : chat.lastSender || '';
+                const isActive = currentChatId === chat.id;
+                const unreadCount = chat.unreadCount || 0;
+                const isGroup = chat.type === 'group';
+                const badgeHtml = isGroup ? `<span class="group-badge">👥</span>` : '';
+
+                return `
+                    <div class="chat-item ${isActive ? 'active' : ''}" data-chat-id="${chat.id}">
+                        <div class="avatar">${avatarHtml}</div>
+                        <div class="info">
+                            <span class="name">${displayName} ${badgeHtml}</span>
+                            <span class="last-msg">
+                                ${lastMsgSender ? `<span class="sender">${lastMsgSender}:</span> ` : ''}
+                                ${lastMsg || 'No messages yet'}
+                            </span>
+                        </div>
+                        <div class="time">${chat.updatedAt ? formatTime(chat.updatedAt) : ''}</div>
+                        ${unreadCount > 0 ? `<div class="unread-badge">${unreadCount}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            document.querySelectorAll('.chat-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const chatId = item.dataset.chatId;
+                    openChat(chatId);
+                });
+            });
+        }
+
+        // ========== Open Chat ==========
+        async function openChat(chatId) {
+            currentChatId = chatId;
+            
+            renderChatList(filteredChats);
+            
+            if (window.innerWidth <= 768) {
+                document.querySelector('.chat-list').style.display = 'none';
+                chatWindow.classList.add('active');
+            }
+
+            const chat = allChats.find(c => c.id === chatId);
+            if (chat) {
+                currentMessages = chat.messages || [];
+                currentChatType = chat.type || 'direct';
+                updateChatHeader(chat);
+                
+                renderMessages(currentMessages, chat.participants);
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                messageInput.focus();
+
+                if (chat.type === 'group') {
+                    groupSettingsBtn.style.display = 'block';
+                } else {
+                    groupSettingsBtn.style.display = 'none';
+                }
+
+                await markAsRead(chatId);
+                await loadChats();
+            } else {
+                showNotification('Chat not found.', 'error');
+                groupSettingsBtn.style.display = 'none';
+            }
+        }
+
+        // ========== Render Messages ==========
+        function renderMessages(messages, participants = []) {
+            if (!messages || messages.length === 0) {
+                messagesArea.innerHTML = `
+                    <div class="empty-msg">No messages yet.<br>Say hello! 👋</div>
+                `;
+                return;
+            }
+
+            const wasAtBottom = messagesArea.scrollHeight - messagesArea.scrollTop - messagesArea.clientHeight < 50;
+
+            messagesArea.innerHTML = messages.map(msg => {
+                const isSelf = msg.sender === currentUser;
+                return renderMessage(msg, isSelf, participants);
+            }).join('');
+
+            // 处理 @mention 点击事件
+            document.querySelectorAll('.mention').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const username = el.dataset.mention;
+                    if (username === 'everyone') {
+                        showNotification('@所有人 已通知所有成员', 'primary');
+                        return;
+                    }
+                    window.location.href = `poSter_profile.html?username=${encodeURIComponent(username)}`;
+                });
+            });
+
+            document.querySelectorAll('.message-wrapper').forEach(el => {
+                el.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const msgId = parseInt(el.dataset.messageId);
+                    const msg = currentMessages.find(m => m.id === msgId);
+                    if (msg) showContextMenu(e.clientX, e.clientY, msg);
+                });
+                let longPressTimer = null;
+                el.addEventListener('touchstart', (e) => {
+                    longPressTimer = setTimeout(() => {
+                        const msgId = parseInt(el.dataset.messageId);
+                        const msg = currentMessages.find(m => m.id === msgId);
+                        if (msg) {
+                            const touch = e.touches[0];
+                            showContextMenu(touch.clientX, touch.clientY, msg);
+                        }
+                    }, 600);
+                });
+                el.addEventListener('touchend', () => { clearTimeout(longPressTimer); });
+                el.addEventListener('touchmove', () => { clearTimeout(longPressTimer); });
+            });
+
+            if (wasAtBottom || messagesArea.scrollTop + messagesArea.clientHeight >= messagesArea.scrollHeight - 100) {
+                messagesArea.scrollTop = messagesArea.scrollHeight;
+            }
+        }
+
+        function showEmptyChatState() {
+            messagesArea.innerHTML = `<div class="empty-msg">Select a conversation to start chatting</div>`;
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+            chatAvatar.textContent = '?';
+            chatUserName.textContent = 'Select a chat';
+            chatUserHandle.textContent = '';
+            groupSettingsBtn.style.display = 'none';
+        }
+
+        // ========== Context Menu ==========
+        function showContextMenu(x, y, msg) {
+            contextMenuTarget = msg;
+            const isSelf = msg.sender === currentUser;
+            
+            const menuItems = contextMenu.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                const action = item.dataset.action;
+                if (action === 'reply') {
+                    item.style.display = 'flex';
+                } else if (action === 'edit') {
+                    item.style.display = isSelf ? 'flex' : 'none';
+                } else if (action === 'delete') {
+                    item.style.display = isSelf ? 'flex' : 'none';
+                }
+            });
+            
+            contextMenu.style.display = 'block';
+            contextMenu.style.left = Math.min(x, window.innerWidth - 170) + 'px';
+            contextMenu.style.top = Math.min(y, window.innerHeight - 130) + 'px';
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!contextMenu.contains(e.target)) {
+                contextMenu.style.display = 'none';
+            }
+            if (!mentionSuggestions.contains(e.target) && e.target !== messageInput) {
+                mentionSuggestions.style.display = 'none';
+            }
+        });
+
+        document.querySelectorAll('.context-menu .menu-item').forEach(item => {
+            item.addEventListener('click', async (e) => {
+                const action = item.dataset.action;
+                const msg = contextMenuTarget;
+                contextMenu.style.display = 'none';
+                if (!msg) return;
+
+                if (action === 'reply') {
+                    replyingTo = msg;
+                    replyPreview.style.display = 'flex';
+                    replyPreviewText.textContent = msg.text.substring(0, 60) + (msg.text.length > 60 ? '...' : '');
+                    messageInput.focus();
+                } else if (action === 'edit') {
+                    if (msg.sender !== currentUser) {
+                        showNotification('You can only edit your own messages.', 'error');
+                        return;
+                    }
+                    const newText = prompt('Edit your message:', msg.text);
+                    if (newText && newText.trim() !== msg.text) {
+                        await editMessage(msg.id, newText.trim());
+                    }
+                } else if (action === 'delete') {
+                    if (msg.sender !== currentUser) {
+                        showNotification('You can only delete your own messages.', 'error');
+                        return;
+                    }
+                    if (confirm('Delete this message?')) {
+                        await deleteMessage(msg.id);
+                    }
+                }
+            });
+        });
+
+        // ========== Edit Message ==========
+        async function editMessage(msgId, newText) {
+            try {
+                const response = await fetch('/api/messages/edit', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: currentUser,
+                        messageId: msgId,
+                        text: newText
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    const msg = currentMessages.find(m => m.id === msgId);
+                    if (msg) {
+                        msg.text = newText;
+                        renderMessages(currentMessages);
+                        showNotification('Message edited.', 'primary');
+                        await loadChats();
+                    }
+                } else {
+                    showNotification(data.message || 'Error editing message.', 'error');
+                }
+            } catch (error) {
+                console.error('Error editing message:', error);
+                showNotification('Network error.', 'error');
+            }
+        }
+
+        // ========== Delete Message ==========
+        async function deleteMessage(msgId) {
+            try {
+                const response = await fetch('/api/messages/delete', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: currentUser,
+                        messageId: msgId
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    currentMessages = currentMessages.filter(m => m.id !== msgId);
+                    renderMessages(currentMessages);
+                    showNotification('Message deleted.', 'primary');
+                    await loadChats();
+                } else {
+                    showNotification(data.message || 'Error deleting message.', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting message:', error);
+                showNotification('Network error.', 'error');
+            }
+        }
+
+        // ========== Mark as Read ==========
+        async function markAsRead(chatId) {
+            try {
+                await fetch('/api/messages/read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser, chatId: chatId })
+                });
+            } catch (error) {
+                console.error('Error marking as read:', error);
+            }
+        }
+
+        // ========== @ Mention Suggestions ==========
+        messageInput.addEventListener('input', function(e) {
+            const value = this.value;
+            const cursorPos = this.selectionStart;
+            const textBeforeCursor = value.substring(0, cursorPos);
+            
+            // 检查 @所有人
+            const allMatch = textBeforeCursor.match(/@(所有人|everyone)$/);
+            if (allMatch) {
+                const chat = allChats.find(c => c.id === currentChatId);
+                if (chat && chat.type === 'group') {
+                    mentionSuggestions.innerHTML = `
+                        <div class="suggestion-item" data-username="everyone">
+                            <span class="handle">@所有人 (All Members)</span>
+                        </div>
+                    `;
+                    mentionSuggestions.style.display = 'block';
+                    mentionSuggestions.querySelectorAll('.suggestion-item').forEach(el => {
+                        el.addEventListener('click', function() {
+                            const username = this.dataset.username;
+                            const text = messageInput.value;
+                            const beforeAt = text.substring(0, text.lastIndexOf('@'));
+                            messageInput.value = beforeAt + '@' + username + ' ';
+                            messageInput.focus();
+                            mentionSuggestions.style.display = 'none';
+                        });
+                    });
+                    return;
+                }
+            }
+
+            const atIndex = textBeforeCursor.lastIndexOf('@');
+            if (atIndex !== -1 && atIndex === textBeforeCursor.length - 1) {
+                const chat = allChats.find(c => c.id === currentChatId);
+                if (chat && chat.participants) {
+                    const participants = chat.participants.filter(p => p !== currentUser);
+                    // 添加 @所有人 选项（仅群组）
+                    let suggestions = [];
+                    if (chat.type === 'group') {
+                        suggestions.push({ username: 'everyone', display: '@所有人 (All Members)' });
+                    }
+                    participants.forEach(p => {
+                        suggestions.push({ username: p, display: '@' + p });
+                    });
+                    if (suggestions.length > 0) {
+                        mentionSuggestions.innerHTML = suggestions.map(s => `
+                            <div class="suggestion-item" data-username="${s.username}">
+                                <span class="handle">${s.display}</span>
+                            </div>
+                        `).join('');
+                        mentionSuggestions.style.display = 'block';
+                        mentionSuggestions.querySelectorAll('.suggestion-item').forEach(el => {
+                            el.addEventListener('click', function() {
+                                const username = this.dataset.username;
+                                const text = messageInput.value;
+                                const beforeAt = text.substring(0, text.lastIndexOf('@'));
+                                const display = username === 'everyone' ? '所有人' : username;
+                                messageInput.value = beforeAt + '@' + display + ' ';
+                                messageInput.focus();
+                                mentionSuggestions.style.display = 'none';
+                            });
+                        });
+                    } else {
+                        mentionSuggestions.style.display = 'none';
+                    }
+                }
+            } else if (atIndex !== -1) {
+                const afterAt = textBeforeCursor.substring(atIndex + 1);
+                if (afterAt.length > 0) {
+                    const chat = allChats.find(c => c.id === currentChatId);
+                    if (chat && chat.participants) {
+                        const participants = chat.participants.filter(p => p !== currentUser);
+                        let suggestions = [];
+                        if (chat.type === 'group' && '所有人'.startsWith(afterAt)) {
+                            suggestions.push({ username: 'everyone', display: '@所有人 (All Members)' });
+                        }
+                        participants.filter(p => p.toLowerCase().startsWith(afterAt.toLowerCase())).forEach(p => {
+                            suggestions.push({ username: p, display: '@' + p });
+                        });
+                        if (suggestions.length > 0) {
+                            mentionSuggestions.innerHTML = suggestions.map(s => `
+                                <div class="suggestion-item" data-username="${s.username}">
+                                    <span class="handle">${s.display}</span>
+                                </div>
+                            `).join('');
+                            mentionSuggestions.style.display = 'block';
+                            mentionSuggestions.querySelectorAll('.suggestion-item').forEach(el => {
+                                el.addEventListener('click', function() {
+                                    const username = this.dataset.username;
+                                    const text = messageInput.value;
+                                    const beforeAt = text.substring(0, text.lastIndexOf('@'));
+                                    const display = username === 'everyone' ? '所有人' : username;
+                                    messageInput.value = beforeAt + '@' + display + ' ';
+                                    messageInput.focus();
+                                    mentionSuggestions.style.display = 'none';
+                                });
+                            });
+                        } else {
+                            mentionSuggestions.style.display = 'none';
+                        }
+                    }
+                } else {
+                    mentionSuggestions.style.display = 'none';
+                }
+            } else {
+                mentionSuggestions.style.display = 'none';
+            }
+        });
+
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                mentionSuggestions.style.display = 'none';
+            }
+        });
+
+        // ========== Send Message ==========
+        async function sendMessage() {
+            let text = messageInput.value.trim();
+            if (!text || !currentChatId) return;
+
+            let replyTo = null;
+            if (replyingTo) {
+                replyTo = {
+                    id: replyingTo.id,
+                    sender: replyingTo.sender,
+                    text: replyingTo.text
+                };
+            }
+
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/messages/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: currentUser,
+                        chatId: currentChatId,
+                        text: text,
+                        replyTo: replyTo
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    messageInput.value = '';
+                    replyingTo = null;
+                    replyPreview.style.display = 'none';
+                    
+                    const newMsg = data.message || {
+                        id: Date.now(),
+                        sender: currentUser,
+                        text: text,
+                        timestamp: new Date().toISOString(),
+                        read: true,
+                        replyTo: replyTo,
+                        avatar: userAvatarMap[currentUser] || ''
+                    };
+                    currentMessages.push(newMsg);
+                    renderMessages(currentMessages);
+                    await loadChats();
+                } else {
+                    showNotification(data.message || 'Error sending message.', 'error');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                showNotification('Network error while sending.', 'error');
+            } finally {
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        // ========== Cancel Reply ==========
+        cancelReplyBtn.addEventListener('click', () => {
+            replyingTo = null;
+            replyPreview.style.display = 'none';
+        });
+
+        // ========== Create Group ==========
+        function openCreateGroupModal() {
+            createGroupModal.style.display = 'block';
+            groupNameInput.value = '';
+            selectedMembers = [];
+            selectedMembersContainer.innerHTML = '';
+            memberSearchInput.value = '';
+            memberSearchResults.style.display = 'none';
+            groupErrorMsg.style.display = 'none';
+            createGroupSubmitBtn.disabled = false;
+            createGroupSubmitBtn.textContent = '🚀 Create Group';
+            selectedEmoji = '👥';
+            selectedEmojiDisplay.textContent = '👥';
+            previewAvatar.textContent = '👥';
+            previewName.textContent = 'Group Name';
+            previewMembers.textContent = '0 members';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCreateGroupModal() {
+            createGroupModal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        // Emoji picker for group
+        emojiPickerSmall.querySelectorAll('span').forEach(el => {
+            el.addEventListener('click', () => {
+                const emoji = el.dataset.emoji;
+                selectedEmoji = emoji;
+                selectedEmojiDisplay.textContent = emoji;
+                previewAvatar.textContent = emoji;
+                emojiPickerSmall.querySelectorAll('span').forEach(s => s.classList.remove('active'));
+                el.classList.add('active');
+            });
+        });
+
+        const firstEmoji = emojiPickerSmall.querySelector('span');
+        if (firstEmoji) {
+            firstEmoji.classList.add('active');
+            selectedEmoji = firstEmoji.dataset.emoji;
+            selectedEmojiDisplay.textContent = selectedEmoji;
+            previewAvatar.textContent = selectedEmoji;
+        }
+
+        groupNameInput.addEventListener('input', function() {
+            const name = this.value.trim() || 'Group Name';
+            previewName.textContent = name;
+        });
+
+        // Member search
+        memberSearchInput.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+            if (query.length === 0) {
+                memberSearchResults.style.display = 'none';
+                return;
+            }
+            
+            const availableFriends = friendsList.filter(f => 
+                !selectedMembers.includes(f.username) &&
+                (f.name.toLowerCase().includes(query) || f.handle.toLowerCase().includes(query))
+            );
+            
+            if (availableFriends.length === 0) {
+                memberSearchResults.innerHTML = `<div class="empty-result">No friends found</div>`;
+                memberSearchResults.style.display = 'block';
+                return;
+            }
+            
+            memberSearchResults.innerHTML = availableFriends.map(f => {
+                const avatarHtml = f.avatar ? `<img src="${f.avatar}" alt="${f.name}">` : getInitials(f.name);
+                return `
+                    <div class="result-item" data-username="${f.username}">
+                        <div class="avatar">${avatarHtml}</div>
+                        <div>
+                            <div class="result-name">${f.name}</div>
+                            <div class="result-handle">@${f.handle}</div>
+                        </div>
+                        <span class="add-badge">Add</span>
+                    </div>
+                `;
+            }).join('');
+            memberSearchResults.style.display = 'block';
+            
+            memberSearchResults.querySelectorAll('.result-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const username = el.dataset.username;
+                    addMember(username);
+                    memberSearchInput.value = '';
+                    memberSearchResults.style.display = 'none';
+                });
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!memberSearchInput.contains(e.target) && !memberSearchResults.contains(e.target)) {
+                memberSearchResults.style.display = 'none';
+            }
+        });
+
+        function addMember(username) {
+            if (selectedMembers.includes(username)) return;
+            if (username === currentUser) return;
+            if (selectedMembers.length >= 10) {
+                showNotification('Maximum 10 members per group.', 'error');
+                return;
+            }
+            
+            selectedMembers.push(username);
+            renderSelectedMembers();
+            groupErrorMsg.style.display = 'none';
+            previewMembers.textContent = `${selectedMembers.length + 1} members`;
+        }
+
+        function removeMember(username) {
+            selectedMembers = selectedMembers.filter(u => u !== username);
+            renderSelectedMembers();
+            previewMembers.textContent = `${selectedMembers.length + 1} members`;
+        }
+
+        function renderSelectedMembers() {
+            selectedMembersContainer.innerHTML = selectedMembers.map(username => {
+                const friend = friendsList.find(f => f.username === username);
+                const displayName = friend ? friend.name : username;
+                return `
+                    <span class="member-tag">
+                        ${displayName}
+                        <span class="remove" data-username="${username}">✕</span>
+                    </span>
+                `;
+            }).join('');
+            
+            selectedMembersContainer.querySelectorAll('.remove').forEach(el => {
+                el.addEventListener('click', () => {
+                    removeMember(el.dataset.username);
+                });
+            });
+        }
+
+        createGroupBtn.addEventListener('click', openCreateGroupModal);
+        closeGroupModalBtn.addEventListener('click', closeCreateGroupModal);
+        createGroupModal.addEventListener('click', (e) => {
+            if (e.target === createGroupModal) closeCreateGroupModal();
+        });
+
+        createGroupSubmitBtn.addEventListener('click', async () => {
+            const name = groupNameInput.value.trim();
+            if (!name) {
+                showNotification('Please enter a group name.', 'error');
+                return;
+            }
+            
+            if (selectedMembers.length < 2) {
+                groupErrorMsg.style.display = 'block';
+                return;
+            }
+            
+            const emoji = selectedEmoji || '👥';
+            
+            createGroupSubmitBtn.disabled = true;
+            createGroupSubmitBtn.textContent = '⏳ Creating...';
+            
+            try {
+                const response = await fetch('/api/messages/group/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: currentUser,
+                        name: name,
+                        emoji: emoji,
+                        members: selectedMembers
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showNotification('✅ Group created successfully!', 'primary');
+                    closeCreateGroupModal();
+                    await loadChats();
+                    if (data.chat) {
+                        await openChat(data.chat.id);
+                    }
+                } else {
+                    showNotification(data.message || 'Error creating group.', 'error');
+                }
+            } catch (error) {
+                console.error('Error creating group:', error);
+                showNotification('Network error.', 'error');
+            } finally {
+                createGroupSubmitBtn.disabled = false;
+                createGroupSubmitBtn.textContent = '🚀 Create Group';
+            }
+        });
+
+        // ========== Group Settings ==========
+        async function openGroupSettings() {
+            if (!currentChatId || !isGroupChat(currentChatId)) {
+                showNotification('Not a group chat.', 'error');
+                return;
+            }
+
+            groupSettingsModal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            groupSettingsBody.innerHTML = `<div class="loading"><div class="spinner"></div></div>`;
+
+            try {
+                const response = await fetch(`/api/messages/group/${currentChatId}?username=${encodeURIComponent(currentUser)}`);
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    renderGroupSettings(data.group);
+                } else {
+                    groupSettingsBody.innerHTML = `<div class="empty-state"><div class="icon">❌</div><div class="title">Failed to load group settings</div><div class="text">${data.message || 'Unknown error'}</div></div>`;
+                }
+            } catch (error) {
+                console.error('Error loading group settings:', error);
+                groupSettingsBody.innerHTML = `<div class="empty-state"><div class="icon">❌</div><div class="title">Network error</div><div class="text">Please try again later.</div></div>`;
+            }
+        }
+
+        function renderGroupSettings(group) {
+            const isOwner = group.owner === currentUser;
+            const isAdmin = group.admins && group.admins.includes(currentUser);
+            const isMember = group.participants && group.participants.includes(currentUser);
+
+            let html = '';
+
+            // ===== Group Info Edit Section =====
+            html += `
+                <div class="settings-section">
+                    <div class="section-title"><span class="section-icon">📝</span> Group Info</div>
+                    <div class="group-info-edit">
+                        <input type="text" id="settingsGroupName" value="${group.name || 'Group Chat'}" maxlength="30" placeholder="Group name">
+                        <div class="emoji-picker-mini" id="settingsEmojiPicker">
+                            <span data-emoji="👥" class="${group.emoji === '👥' ? 'active' : ''}">👥</span>
+                            <span data-emoji="✈️" class="${group.emoji === '✈️' ? 'active' : ''}">✈️</span>
+                            <span data-emoji="🎮" class="${group.emoji === '🎮' ? 'active' : ''}">🎮</span>
+                            <span data-emoji="📚" class="${group.emoji === '📚' ? 'active' : ''}">📚</span>
+                            <span data-emoji="🍕" class="${group.emoji === '🍕' ? 'active' : ''}">🍕</span>
+                            <span data-emoji="🏖️" class="${group.emoji === '🏖️' ? 'active' : ''}">🏖️</span>
+                            <span data-emoji="🎵" class="${group.emoji === '🎵' ? 'active' : ''}">🎵</span>
+                            <span data-emoji="💻" class="${group.emoji === '💻' ? 'active' : ''}">💻</span>
+                            <span data-emoji="🎯" class="${group.emoji === '🎯' ? 'active' : ''}">🎯</span>
+                            <span data-emoji="🚀" class="${group.emoji === '🚀' ? 'active' : ''}">🚀</span>
+                            <span data-emoji="🌈" class="${group.emoji === '🌈' ? 'active' : ''}">🌈</span>
+                            <span data-emoji="🎨" class="${group.emoji === '🎨' ? 'active' : ''}">🎨</span>
+                            <span data-emoji="⚽" class="${group.emoji === '⚽' ? 'active' : ''}">⚽</span>
+                        </div>
+                        <button class="save-info-btn" id="saveGroupInfoBtn" ${(isOwner || isAdmin) ? '' : 'disabled'}>Save</button>
+                    </div>
+                    ${(isOwner || isAdmin) ? '' : '<p style="font-size:12px;color:#888;margin-top:4px;">Only group owner and admins can edit group info.</p>'}
+                </div>
+                <hr class="settings-divider">
+            `;
+
+            // ===== Members Section =====
+            html += `
+                <div class="settings-section">
+                    <div class="section-title"><span class="section-icon">👤</span> Members (${group.participants ? group.participants.length : 0})</div>
+            `;
+
+            if (group.memberDetails) {
+                group.memberDetails.forEach(member => {
+                    const isMemberOwner = member.isOwner;
+                    const isMemberAdmin = member.isAdmin;
+                    const isSelf = member.username === currentUser;
+                    const canManage = isOwner || (isAdmin && !isMemberOwner);
+
+                    let badges = '';
+                    if (isMemberOwner) badges += '<span class="row-badge owner">Owner</span>';
+                    if (isMemberAdmin) badges += '<span class="row-badge admin">Admin</span>';
+
+                    let actions = '';
+                    if (!isSelf && canManage) {
+                        if (!isMemberOwner) {
+                            if (isMemberAdmin) {
+                                actions += `<button class="action-btn-sm btn-admin active" onclick="toggleAdmin('${member.username}', 'unset')">Admin</button>`;
+                            } else {
+                                actions += `<button class="action-btn-sm btn-admin" onclick="toggleAdmin('${member.username}', 'set')">Make Admin</button>`;
+                            }
+                            if (!isMemberAdmin || isOwner) {
+                                actions += `<button class="action-btn-sm btn-remove" onclick="removeMember('${member.username}')">Remove</button>`;
+                            }
+                        }
+                    }
+                    if (isOwner && !isSelf && !isMemberOwner) {
+                        actions += `<button class="action-btn-sm btn-transfer" onclick="transferOwner('${member.username}')">Transfer</button>`;
+                    }
+                    if (isSelf && !isMemberOwner) {
+                        actions += `<button class="action-btn-sm btn-leave" onclick="leaveGroup()">Leave</button>`;
+                    }
+                    if (isSelf && isMemberOwner) {
+                        actions += `<button class="action-btn-sm btn-delete" onclick="deleteGroup()">Delete Group</button>`;
+                    }
+
+                    const avatarHtml = member.avatar ? `<img src="${member.avatar}" alt="${member.name}">` : getInitials(member.name);
+
+                    html += `
+                        <div class="settings-row">
+                            <div class="row-avatar">${avatarHtml}</div>
+                            <div class="row-info">
+                                <span class="row-name">${member.name} ${badges}</span>
+                                <span class="row-handle">@${member.handle}</span>
+                            </div>
+                            <div class="row-actions">${actions}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Add member section (only for owner/admin)
+            if (isOwner || isAdmin) {
+                html += `
+                    <div style="margin-top:12px;">
+                        <div style="display:flex;gap:8px;align-items:center;position:relative;">
+                            <input type="text" id="addMemberInput" placeholder="Search friends to add..." style="flex:1;padding:8px 12px;border:2px solid #e8ecf0;border-radius:8px;font-family:'Open Sans',sans-serif;font-size:14px;">
+                            <button class="action-btn-sm btn-admin" id="addMemberBtn" style="padding:8px 16px;border:none;border-radius:20px;font-weight:600;cursor:pointer;background:var(--primary-color);color:white;">Add</button>
+                            <div id="addMemberSuggestions" style="position:absolute;top:100%;left:0;right:0;background:white;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);border:1px solid #eef2f5;display:none;z-index:100;max-height:150px;overflow-y:auto;margin-top:4px;"></div>
+                        </div>
+                        <div id="addMemberResult" style="font-size:12px;margin-top:4px;color:#888;"></div>
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+
+            groupSettingsBody.innerHTML = html;
+
+            // ===== Bind Events =====
+
+            // Save group info
+            const saveInfoBtn = document.getElementById('saveGroupInfoBtn');
+            if (saveInfoBtn) {
+                saveInfoBtn.addEventListener('click', async () => {
+                    const name = document.getElementById('settingsGroupName').value.trim();
+                    const emojiEl = document.querySelector('#settingsEmojiPicker .active');
+                    const emoji = emojiEl ? emojiEl.dataset.emoji : '👥';
+                    if (!name) {
+                        showNotification('Group name cannot be empty.', 'error');
+                        return;
+                    }
+                    try {
+                        const response = await fetch(`/api/messages/group/${currentChatId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ username: currentUser, name, emoji })
+                        });
+                        const data = await response.json();
+                        if (response.ok && data.success) {
+                            showNotification('Group info updated!', 'primary');
+                            await loadChats();
+                            const chat = allChats.find(c => c.id === currentChatId);
+                            if (chat) updateChatHeader(chat);
+                            openGroupSettings();
+                        } else {
+                            showNotification(data.message || 'Error updating group info.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error updating group info:', error);
+                        showNotification('Network error.', 'error');
+                    }
+                });
+            }
+
+            // Emoji picker for settings
+            const settingsEmojiPicker = document.getElementById('settingsEmojiPicker');
+            if (settingsEmojiPicker) {
+                settingsEmojiPicker.querySelectorAll('span').forEach(el => {
+                    el.addEventListener('click', () => {
+                        settingsEmojiPicker.querySelectorAll('span').forEach(s => s.classList.remove('active'));
+                        el.classList.add('active');
+                    });
+                });
+            }
+
+            // Add member
+            const addMemberBtn = document.getElementById('addMemberBtn');
+            const addMemberInput = document.getElementById('addMemberInput');
+            const addMemberResult = document.getElementById('addMemberResult');
+            if (addMemberBtn && addMemberInput) {
+                const addMemberHandler = async () => {
+                    const username = addMemberInput.value.trim();
+                    if (!username) {
+                        addMemberResult.textContent = 'Please enter a username.';
+                        addMemberResult.style.color = '#e67e22';
+                        return;
+                    }
+                    addMemberBtn.disabled = true;
+                    addMemberResult.textContent = 'Adding...';
+                    addMemberResult.style.color = '#888';
+                    try {
+                        const response = await fetch(`/api/messages/group/${currentChatId}/add`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ username: currentUser, newMember: username })
+                        });
+                        const data = await response.json();
+                        if (response.ok && data.success) {
+                            addMemberResult.textContent = `✅ ${username} added!`;
+                            addMemberResult.style.color = 'green';
+                            addMemberInput.value = '';
+                            await loadChats();
+                            openGroupSettings();
+                        } else {
+                            addMemberResult.textContent = `❌ ${data.message || 'Error adding member.'}`;
+                            addMemberResult.style.color = 'red';
+                        }
+                    } catch (error) {
+                        console.error('Error adding member:', error);
+                        addMemberResult.textContent = '❌ Network error.';
+                        addMemberResult.style.color = 'red';
+                    } finally {
+                        addMemberBtn.disabled = false;
+                    }
+                };
+                addMemberBtn.addEventListener('click', addMemberHandler);
+                addMemberInput.addEventListener('keypress', (e) => {
+                    // Add member search suggestions
+                    const addMemberSuggestions = document.getElementById('addMemberSuggestions');
+                    if (addMemberInput && addMemberSuggestions) {
+                        addMemberInput.addEventListener('input', function() {
+                            const query = this.value.trim().toLowerCase();
+                            if (query.length === 0) {
+                                addMemberSuggestions.style.display = 'none';
+                                return;
+                            }
+                            
+                            const available = friendsList.filter(f => 
+                                !group.participants.includes(f.username) &&
+                                (f.name.toLowerCase().includes(query) || f.handle.toLowerCase().includes(query))
+                            );
+                            
+                            if (available.length === 0) {
+                                addMemberSuggestions.innerHTML = '<div style="padding:10px 14px;color:#888;font-size:13px;">No friends to add</div>';
+                                addMemberSuggestions.style.display = 'block';
+                                return;
+                            }
+                            
+                            addMemberSuggestions.innerHTML = available.map(f => `
+                                <div class="suggestion-item" data-username="${f.username}" style="padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f5f7f9;">
+                                    <span style="font-weight:600;">${f.name}</span>
+                                    <span style="color:#888;font-size:13px;">@${f.handle}</span>
+                                    <span style="margin-left:auto;color:var(--primary-color);font-size:12px;">Add</span>
+                                </div>
+                            `).join('');
+                            addMemberSuggestions.style.display = 'block';
+                            
+                            addMemberSuggestions.querySelectorAll('.suggestion-item').forEach(el => {
+                                el.addEventListener('click', function() {
+                                    addMemberInput.value = this.dataset.username;
+                                    addMemberSuggestions.style.display = 'none';
+                                    addMemberHandler();
+                                });
+                            });
+                        });
+                        
+                        document.addEventListener('click', (e) => {
+                            if (!addMemberInput.contains(e.target) && !addMemberSuggestions.contains(e.target)) {
+                                addMemberSuggestions.style.display = 'none';
+                            }
+                        });
+                    }
+                    if (e.key === 'Enter') addMemberHandler();
+                });
+            }
+        }
+
+        // ===== Group Settings Actions (global functions) =====
+
+        window.toggleAdmin = async function(username, action) {
+            try {
+                const response = await fetch(`/api/messages/group/${currentChatId}/admin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser, targetMember: username, action })
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    showNotification(action === 'set' ? `✅ ${username} is now an admin.` : `✅ ${username} is no longer an admin.`, 'primary');
+                    await loadChats();
+                    openGroupSettings();
+                } else {
+                    showNotification(data.message || 'Error updating admin status.', 'error');
+                }
+            } catch (error) {
+                console.error('Error toggling admin:', error);
+                showNotification('Network error.', 'error');
+            }
+        };
+
+        window.removeMember = async function(username) {
+            if (!confirm(`Remove ${username} from the group?`)) return;
+            try {
+                const response = await fetch(`/api/messages/group/${currentChatId}/remove`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser, targetMember: username })
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    showNotification(`✅ ${username} removed from the group.`, 'primary');
+                    await loadChats();
+                    openGroupSettings();
+                } else {
+                    showNotification(data.message || 'Error removing member.', 'error');
+                }
+            } catch (error) {
+                console.error('Error removing member:', error);
+                showNotification('Network error.', 'error');
+            }
+        };
+
+        window.transferOwner = async function(username) {
+            if (!confirm(`Transfer ownership to ${username}? You will become a regular admin.`)) return;
+            try {
+                const response = await fetch(`/api/messages/group/${currentChatId}/transfer`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser, newOwner: username })
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    showNotification(`✅ Ownership transferred to ${username}.`, 'primary');
+                    await loadChats();
+                    openGroupSettings();
+                } else {
+                    showNotification(data.message || 'Error transferring ownership.', 'error');
+                }
+            } catch (error) {
+                console.error('Error transferring ownership:', error);
+                showNotification('Network error.', 'error');
+            }
+        };
+
+        window.leaveGroup = async function() {
+            if (!confirm('Are you sure you want to leave this group?')) return;
+            try {
+                const response = await fetch(`/api/messages/group/${currentChatId}/leave`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser })
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    showNotification('You have left the group.', 'primary');
+                    groupSettingsModal.style.display = 'none';
+                    document.body.style.overflow = '';
+                    currentChatId = null;
+                    currentMessages = [];
+                    showEmptyChatState();
+                    await loadChats();
+                } else {
+                    showNotification(data.message || 'Error leaving group.', 'error');
+                }
+            } catch (error) {
+                console.error('Error leaving group:', error);
+                showNotification('Network error.', 'error');
+            }
+        };
+
+        window.deleteGroup = async function() {
+            if (!confirm('⚠️ Are you sure you want to DELETE this group? This cannot be undone!')) return;
+            try {
+                const response = await fetch(`/api/messages/group/${currentChatId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser })
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    showNotification('Group deleted successfully.', 'primary');
+                    groupSettingsModal.style.display = 'none';
+                    document.body.style.overflow = '';
+                    currentChatId = null;
+                    currentMessages = [];
+                    showEmptyChatState();
+                    await loadChats();
+                } else {
+                    showNotification(data.message || 'Error deleting group.', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting group:', error);
+                showNotification('Network error.', 'error');
+            }
+        };
+
+        groupSettingsBtn.addEventListener('click', openGroupSettings);
+        closeGroupSettingsBtn.addEventListener('click', () => {
+            groupSettingsModal.style.display = 'none';
+            document.body.style.overflow = '';
+        });
+        groupSettingsModal.addEventListener('click', (e) => {
+            if (e.target === groupSettingsModal) {
+                groupSettingsModal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        });
+
+        // ========== Suggested Users ==========
+        async function loadSuggestedUsers() {
+            if (!currentUser) return;
+            try {
+                const response = await fetch('/api/users/suggested?username=' + encodeURIComponent(currentUser));
+                const data = await response.json();
+
+                if (response.ok && data.success && data.users && data.users.length > 0) {
+                    suggestedUsers = data.users;
+                    renderSuggestedUsers();
+                } else {
+                    suggestedUsersContainer.innerHTML = '<p style="color: #888; font-size: 13px; text-align: center; padding: 15px;">No suggestions</p>';
+                }
+            } catch (error) {
+                console.error('Error loading suggested users:', error);
+                suggestedUsersContainer.innerHTML = '<p style="color: #888; font-size: 13px; text-align: center; padding: 15px;">Unable to load suggestions</p>';
+            }
+        }
+
+        function renderSuggestedUsers() {
+            suggestedUsersContainer.innerHTML = suggestedUsers.map(user => {
+                const avatarHtml = user.avatar 
+                    ? `<img src="${user.avatar}" alt="${user.name}">` 
+                    : getInitials(user.name);
+                const profileLink = `poSter_profile.html?username=${encodeURIComponent(user.username)}`;
+                return `
+                    <div class="suggested-user">
+                        <div class="suggested-avatar" onclick="window.location.href='${profileLink}'">${avatarHtml}</div>
+                        <div class="suggested-info" onclick="window.location.href='${profileLink}'">
+                            <span class="suggested-name">${user.name}</span>
+                            <span class="suggested-handle">@${user.handle}</span>
+                        </div>
+                        <button class="btn btn-primary" onclick="startDirectChat('${user.username}')">Chat</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ========== Start Direct Chat ==========
+        async function startDirectChat(partner) {
+            try {
+                const response = await fetch('/api/messages/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser, partner: partner })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    await loadChats();
+                    if (data.chat && data.chat.id) {
+                        await openChat(data.chat.id);
+                    } else {
+                        const chat = allChats.find(c => c.type === 'direct' && c.participants && c.participants.includes(partner));
+                        if (chat) {
+                            await openChat(chat.id);
+                        }
+                    }
+                    
+                    if (window.innerWidth <= 768) {
+                        document.querySelector('.chat-list').style.display = 'none';
+                        chatWindow.classList.add('active');
+                    }
+                } else {
+                    showNotification(data.message || 'Error starting chat.', 'error');
+                }
+            } catch (error) {
+                console.error('Error starting chat:', error);
+                showNotification('Network error.', 'error');
+            }
+        }
+
+        // ========== Back Button (Mobile) ==========
+        backBtn.addEventListener('click', () => {
+            document.querySelector('.chat-list').style.display = 'flex';
+            chatWindow.classList.remove('active');
+            currentChatId = null;
+            currentChatType = null;
+            groupSettingsBtn.style.display = 'none';
+        });
+
+        // ========== Search ==========
+        chatSearchInput.addEventListener('input', () => {
+            searchQuery = chatSearchInput.value.trim().toLowerCase();
+            if (searchQuery.length === 0) {
+                filteredChats = [...allChats];
+            } else {
+                filteredChats = allChats.filter(chat =>
+                    (chat.name || '').toLowerCase().includes(searchQuery) ||
+                    (chat.partner || '').toLowerCase().includes(searchQuery) ||
+                    (chat.id || '').toLowerCase().includes(searchQuery)
+                );
+            }
+            renderChatList(filteredChats);
+        });
+
+        // ========== Send Events ==========
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // ========== Logout ==========
+        logoutBtn.addEventListener('click', () => {
+            if (pollingInterval) clearInterval(pollingInterval);
+            localStorage.removeItem('currentUser');
+            window.location.href = 'poSter.html';
+        });
+
+        // ========== Polling ==========
+        function startPolling() {
+            if (pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = setInterval(async () => {
+                await loadChats();
+            }, 5000);
+        }
+
+        // ========== Init ==========
+        window.addEventListener('load', async () => {
+            if (!currentUser) {
+                window.location.href = 'poSter.html';
+                return;
+            }
+
+            await loadAllUsernames();
+            await loadUserAvatars();
+            await loadFriends();
+            await loadChats();
+            await loadSuggestedUsers();
+            startPolling();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const chatParam = urlParams.get('chat');
+            
+            if (chatParam) {
+                console.log('📩 Opening chat with:', chatParam);
+                setTimeout(async () => {
+                    try {
+                        if (chatParam.startsWith('group_')) {
+                            const groupChat = allChats.find(c => c.id === chatParam);
+                            if (groupChat) {
+                                await openChat(groupChat.id);
+                            } else {
+                                showNotification('Group not found.', 'error');
+                            }
+                        } else {
+                            let chat = allChats.find(c => 
+                                c.type !== 'group' && 
+                                c.participants && 
+                                c.participants.includes(currentUser) && 
+                                c.participants.includes(chatParam)
+                            );
+                            
+                            if (!chat) {
+                                const startResponse = await fetch('/api/messages/start', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ username: currentUser, partner: chatParam })
+                                });
+                                if (startResponse.ok) {
+                                    await loadChats();
+                                    chat = allChats.find(c => 
+                                        c.type !== 'group' && 
+                                        c.participants && 
+                                        c.participants.includes(currentUser) && 
+                                        c.participants.includes(chatParam)
+                                    );
+                                }
+                            }
+                            
+                            if (chat) {
+                                await openChat(chat.id);
+                            } else {
+                                showNotification('Could not start chat.', 'error');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error opening chat from URL:', error);
+                    }
+                }, 600);
+            }
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) {
+                    document.querySelector('.chat-list').style.display = 'flex';
+                    chatWindow.classList.remove('active');
+                }
+            });
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (pollingInterval) clearInterval(pollingInterval);
+        });
+    </script>
+</body>
+</html>

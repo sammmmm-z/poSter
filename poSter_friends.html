@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friends - poSter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-color: #62a8a8;
+            --primary-hover: #81c9c9;
+            --shadow-color: rgba(98, 168, 168, 0.3);
+            --background-color: #f4f7fc;
+            --background-light: white;
+            --text-color: #333;
+            --border-radius: 16px;
+        }
+        body {
+            background: linear-gradient(135deg, var(--background-color) 0%, #e8f0f5 100%);
+            font-family: 'Open Sans', sans-serif;
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        header {
+            background: var(--background-light);
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(98, 168, 168, 0.1);
+            border-radius: 12px;
+            margin-bottom: 40px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            color: var(--primary-color);
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .header-nav { display: flex; gap: 30px; align-items: center; }
+        .header-nav a {
+            text-decoration: none;
+            color: #666;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+        .header-nav a:hover { color: var(--primary-color); }
+        .header-nav a.active { color: var(--primary-color); }
+
+        #logoutBtn {
+            background-color: #f0f0f0;
+            color: var(--text-color);
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background-color 0.3s, color 0.3s;
+            font-family: 'Open Sans', sans-serif;
+        }
+        #logoutBtn:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 250px 1fr 300px;
+            gap: 30px;
+        }
+        .sidebar {
+            background: var(--background-light);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+        .sidebar-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            color: var(--text-color);
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        .sidebar-menu { list-style: none; }
+        .sidebar-menu li { margin-bottom: 12px; }
+        .sidebar-menu a {
+            display: block;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: #666;
+            border-radius: 8px;
+            transition: background-color 0.3s, color 0.3s;
+            font-weight: 500;
+        }
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .friends-container {
+            background: var(--background-light);
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 10px var(--shadow-color);
+            overflow: hidden;
+        }
+        .friends-header {
+            padding: 25px 30px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .friends-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .friends-title .count {
+            font-family: 'Open Sans', sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            color: #888;
+            background: #f0f0f0;
+            padding: 2px 14px;
+            border-radius: 20px;
+        }
+        .friends-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            background: #fafbfc;
+        }
+        .search-box input:focus { outline: none; border-color: var(--primary-color); background: white; }
+        .search-box .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+            font-size: 16px;
+        }
+        .friends-content {
+            padding: 20px 30px;
+            max-height: 700px;
+            overflow-y: auto;
+        }
+        /* ========== FRIEND LIST ITEM ========== */
+        .friend-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+            animation: slideInUp 0.3s ease-out;
+        }
+        .friend-item:last-child { border-bottom: none; }
+        .friend-item:hover { background: #f8fafc; }
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .friend-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 20px;
+            flex-shrink: 0;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 2px solid transparent;
+        }
+        .friend-avatar:hover { transform: scale(1.05); border-color: var(--primary-color); }
+        .friend-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .friend-info {
+            flex-grow: 1;
+            cursor: pointer;
+            min-width: 0;
+        }
+        .friend-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--text-color);
+            display: block;
+            transition: color 0.2s;
+        }
+        .friend-name:hover { color: var(--primary-color); }
+        .friend-handle {
+            font-size: 13px;
+            color: #888;
+            display: block;
+        }
+        .friend-bio {
+            font-size: 13px;
+            color: #666;
+            display: block;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 300px;
+        }
+        .friend-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .btn {
+            padding: 7px 16px;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Open Sans', sans-serif;
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            box-shadow: 0 2px 10px rgba(98, 168, 168, 0.25);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(98, 168, 168, 0.35);
+        }
+        .btn-following {
+            background-color: #f0f0f0;
+            color: #666;
+            border: 1px solid #e0e0e0;
+        }
+        .btn-following:hover {
+            background-color: #ffe6e6;
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+        .btn-message {
+            background-color: #e8f0f5;
+            color: var(--primary-color);
+            border: 1px solid transparent;
+        }
+        .btn-message:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(98, 168, 168, 0.3);
+        }
+        .btn-message .msg-icon { font-size: 14px; }
+
+        /* ========== RIGHT SIDEBAR ========== */
+        .right-sidebar {
+            background: var(--background-light);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+        .right-sidebar-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            color: var(--text-color);
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        .suggested-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .suggested-user:last-child { border-bottom: none; }
+        .suggested-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            flex-shrink: 0;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .suggested-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .suggested-info { flex-grow: 1; cursor: pointer; }
+        .suggested-name { font-size: 14px; font-weight: 700; color: var(--text-color); display: block; }
+        .suggested-name:hover { color: var(--primary-color); }
+        .suggested-handle { font-size: 12px; color: #888; }
+
+        /* ========== EMPTY STATE ========== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 25px;
+            color: #888;
+        }
+        .empty-state-icon { font-size: 60px; margin-bottom: 15px; }
+        .empty-state-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--text-color); }
+        .empty-state-text { font-size: 15px; color: #888; }
+        .empty-state .btn { margin-top: 16px; padding: 10px 28px; font-size: 14px; }
+
+        /* ========== LOADING ========== */
+        .loading {
+            text-align: center;
+            padding: 60px 25px;
+            color: var(--primary-color);
+        }
+        .spinner {
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            border: 3px solid #f0f0f0;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ========== NOTIFICATION ========== */
+        .notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            animation: slideInRight 0.3s ease-out;
+            z-index: 3000;
+            max-width: 90vw;
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .notification.error { background: #dc3545; }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1024px) {
+            .main-container { grid-template-columns: 1fr 300px; }
+            .sidebar { display: none; }
+        }
+        @media (max-width: 768px) {
+            header { flex-direction: column; gap: 15px; }
+            .header-nav { gap: 15px; flex-wrap: wrap; justify-content: center; }
+            .main-container { grid-template-columns: 1fr; }
+            .right-sidebar { display: none; }
+            .friends-header { flex-direction: column; align-items: stretch; }
+            .friends-title { font-size: 24px; }
+            .friends-controls { flex-direction: column; align-items: stretch; }
+            .search-box { min-width: 100%; }
+            .friends-content { padding: 15px; }
+            .friend-item { flex-wrap: wrap; gap: 12px; padding: 14px 16px; }
+            .friend-actions { width: 100%; justify-content: flex-end; }
+            .friend-bio { max-width: 100%; white-space: normal; }
+            .friend-info { flex: 1 1 100%; }
+        }
+        @media (max-width: 480px) {
+            .friend-item { padding: 12px; }
+            .friend-avatar { width: 44px; height: 44px; font-size: 16px; }
+            .friend-name { font-size: 14px; }
+            .btn { padding: 5px 12px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="poSter_home.html" class="header-logo">poSter</a>
+        <nav class="header-nav">
+            <a href="poSter_home.html">Home</a>
+            <a href="poSter_friends.html" class="active">Friends</a>
+            <a href="poSter_messages.html">Messages</a>
+            <a href="#notifications">Notifications</a>
+        </nav>
+        <button class="btn" id="logoutBtn">Logout</button>
+    </header>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="sidebar-title">Menu</div>
+            <ul class="sidebar-menu">
+                <li><a href="poSter_home.html">📰 Home</a></li>
+                <li><a href="poSter_friends.html" class="active">👥 Friends</a></li>
+                <li><a href="poSter_messages.html">💬 Messages</a></li>
+                <li><a href="poSter_profile.html">👤 Profile</a></li>
+            </ul>
+        </aside>
+
+        <div class="friends-container">
+            <div class="friends-header">
+                <div class="friends-title">
+                    👥 Friends
+                    <span class="count" id="friendCount">0</span>
+                </div>
+                <div class="friends-controls">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="searchInput" placeholder="Search friends...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="friends-content" id="friendsContent">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 15px;">Loading friends...</p>
+                </div>
+            </div>
+        </div>
+
+        <aside class="right-sidebar">
+            <div class="right-sidebar-title">Suggested For You</div>
+            <div id="suggestedUsers">
+                <div class="loading"><div class="spinner"></div></div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        const currentUser = localStorage.getItem('currentUser');
+        let allFriends = [];
+        let filteredFriends = [];
+        let suggestedUsers = [];
+        let searchQuery = '';
+
+        const friendsContent = document.getElementById('friendsContent');
+        const friendCount = document.getElementById('friendCount');
+        const searchInput = document.getElementById('searchInput');
+        const suggestedUsersContainer = document.getElementById('suggestedUsers');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // ========== Helper Functions ==========
+        function showNotification(message, type = 'primary') {
+            const notification = document.createElement('div');
+            notification.className = 'notification' + (type === 'error' ? ' error' : '');
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => { notification.remove(); }, 3000);
+        }
+
+        function getInitials(name) {
+            return name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?';
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            if (diff < 60000) return 'just now';
+            if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+            return date.toLocaleDateString();
+        }
+
+        function showEmptyState(message = 'No friends yet.') {
+            friendsContent.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">👥</div>
+                    <div class="empty-state-title">${message}</div>
+                    <div class="empty-state-text">Start following people to see them here.</div>
+                    <button class="btn btn-primary" onclick="window.location.href='poSter_home.html'">📰 Go to Home</button>
+                </div>
+            `;
+        }
+
+        // ========== Navigate to Messages ==========
+        function goToMessages(partner) {
+            // 跳转到 Messages 页面，并带上 partner 参数
+            window.location.href = `poSter_messages.html?chat=${encodeURIComponent(partner)}`;
+        }
+
+        // ========== Load Friends ==========
+        async function loadFriends() {
+            if (!currentUser) {
+                window.location.href = 'poSter.html';
+                return;
+            }
+
+            friendsContent.innerHTML = `<div class="loading"><div class="spinner"></div><p style="margin-top: 15px;">Loading friends...</p></div>`;
+
+            try {
+                const listResponse = await fetch(`/api/profile/list?type=following&username=${encodeURIComponent(currentUser)}`);
+                const listData = await listResponse.json();
+
+                if (listData.success && listData.users) {
+                    allFriends = listData.users;
+                    filteredFriends = [...allFriends];
+                    renderFriends(filteredFriends);
+                    friendCount.textContent = allFriends.length;
+                } else {
+                    showEmptyState('You are not following anyone yet.');
+                    friendCount.textContent = '0';
+                }
+
+            } catch (error) {
+                console.error('Error loading friends:', error);
+                showNotification('Error loading friends list.', 'error');
+                friendsContent.innerHTML = '<div class="empty-state">Unable to load friends. Please try again.</div>';
+            }
+        }
+
+        // ========== Render Friends ==========
+        function renderFriends(friends) {
+            if (friends.length === 0) {
+                if (searchQuery.length > 0) {
+                    showEmptyState(`No friends found matching "${searchQuery}".`);
+                } else {
+                    showEmptyState('You are not following anyone yet.');
+                }
+                return;
+            }
+
+            friendsContent.innerHTML = friends.map(friend => createFriendItem(friend)).join('');
+
+            // 绑定 Follow/Unfollow 按钮事件
+            document.querySelectorAll('.friend-follow-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const handle = btn.dataset.handle;
+                    const isFollowing = btn.dataset.following === 'true';
+                    if (isFollowing) {
+                        unfollowUser(handle, btn);
+                    }
+                });
+            });
+
+            // 绑定 Message 按钮事件 - 跳转到 Messages 页面
+            document.querySelectorAll('.friend-message-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const partner = btn.dataset.partner;
+                    goToMessages(partner);
+                });
+            });
+
+            // 绑定点击头像和名字跳转 Profile
+            document.querySelectorAll('.friend-profile-link').forEach(el => {
+                el.addEventListener('click', () => {
+                    const username = el.dataset.username;
+                    window.location.href = `poSter_profile.html?username=${encodeURIComponent(username)}`;
+                });
+            });
+        }
+
+        function createFriendItem(friend) {
+            const avatarHtml = friend.avatar 
+                ? `<img src="${friend.avatar}" alt="${friend.name}">` 
+                : getInitials(friend.name);
+            
+            const profileLink = `poSter_profile.html?username=${encodeURIComponent(friend.username)}`;
+
+            return `
+                <div class="friend-item">
+                    <div class="friend-avatar friend-profile-link" data-username="${friend.username}" title="View profile">${avatarHtml}</div>
+                    <div class="friend-info friend-profile-link" data-username="${friend.username}">
+                        <span class="friend-name">${friend.name}</span>
+                        <span class="friend-handle">@${friend.handle}</span>
+                        ${friend.bio && friend.bio !== 'None' ? `<span class="friend-bio">${friend.bio}</span>` : ''}
+                    </div>
+                    <div class="friend-actions">
+                        <button class="btn btn-following friend-follow-btn" data-handle="${friend.handle}" data-following="true">
+                            Following
+                        </button>
+                        <button class="btn btn-message friend-message-btn" data-partner="${friend.username}">
+                            <span class="msg-icon">💬</span> Message
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ========== Follow / Unfollow ==========
+        async function unfollowUser(handle, btnElement) {
+            try {
+                const response = await fetch('/api/user/unfollow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser, unfollow_handle: handle })
+                });
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showNotification(`💔 Unfollowed @${handle}.`, 'primary');
+                    // 从列表中移除
+                    allFriends = allFriends.filter(f => f.handle !== handle);
+                    filteredFriends = filteredFriends.filter(f => f.handle !== handle);
+                    friendCount.textContent = allFriends.length;
+                    renderFriends(filteredFriends);
+                    loadSuggestedUsers();
+                } else {
+                    showNotification(data.message || 'Error unfollowing user.', 'error');
+                }
+            } catch (error) {
+                console.error('Error unfollowing user:', error);
+                showNotification('Network error.', 'error');
+            }
+        }
+
+        // ========== Suggested Users ==========
+        async function loadSuggestedUsers() {
+            if (!currentUser) return;
+            try {
+                const response = await fetch('/api/users/suggested?username=' + encodeURIComponent(currentUser));
+                const data = await response.json();
+
+                if (response.ok && data.success && data.users && data.users.length > 0) {
+                    suggestedUsers = data.users;
+                    renderSuggestedUsers();
+                } else {
+                    suggestedUsersContainer.innerHTML = '<p style="color: #888; font-size: 13px; text-align: center; padding: 15px;">No suggestions available</p>';
+                }
+            } catch (error) {
+                console.error('Error loading suggested users:', error);
+                suggestedUsersContainer.innerHTML = '<p style="color: #888; font-size: 13px; text-align: center; padding: 15px;">Unable to load suggestions</p>';
+            }
+        }
+
+        function renderSuggestedUsers() {
+            suggestedUsersContainer.innerHTML = suggestedUsers.map(user => {
+                const avatarHtml = user.avatar 
+                    ? `<img src="${user.avatar}" alt="${user.name}">` 
+                    : getInitials(user.name);
+                const profileLink = `poSter_profile.html?username=${encodeURIComponent(user.username)}`;
+                return `
+                    <div class="suggested-user">
+                        <div class="suggested-avatar" onclick="window.location.href='${profileLink}'">${avatarHtml}</div>
+                        <div class="suggested-info" onclick="window.location.href='${profileLink}'">
+                            <span class="suggested-name">${user.name}</span>
+                            <span class="suggested-handle">@${user.handle}</span>
+                        </div>
+                        <button class="btn btn-primary" onclick="followSuggestedUser('${user.handle}')" style="font-size:11px; padding:4px 12px;">Follow</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function followSuggestedUser(handle) {
+            try {
+                const response = await fetch('/api/user/follow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser, follow_handle: handle })
+                });
+                const data = await response.json();
+
+                if (response.ok && data.success && data.message !== 'Already following.') {
+                    showNotification(`✅ Now following @${handle}!`, 'primary');
+                    await loadFriends();
+                    await loadSuggestedUsers();
+                } else if (data.message === 'Already following.') {
+                    showNotification(`Already following @${handle}.`, 'primary');
+                }
+            } catch (error) {
+                console.error('Error following user:', error);
+                showNotification('Error following user.', 'error');
+            }
+        }
+
+        // ========== Search ==========
+        searchInput.addEventListener('input', () => {
+            searchQuery = searchInput.value.trim().toLowerCase();
+            if (searchQuery.length === 0) {
+                filteredFriends = [...allFriends];
+            } else {
+                filteredFriends = allFriends.filter(friend => 
+                    friend.name.toLowerCase().includes(searchQuery) ||
+                    friend.handle.toLowerCase().includes(searchQuery)
+                );
+            }
+            renderFriends(filteredFriends);
+        });
+
+        // ========== Logout ==========
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'poSter.html';
+        });
+
+        // ========== Init ==========
+        window.addEventListener('load', () => {
+            if (!currentUser) {
+                window.location.href = 'poSter.html';
+                return;
+            }
+            loadFriends();
+            loadSuggestedUsers();
+        });
+    </script>
+</body>
+</html>
