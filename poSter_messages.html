@@ -1857,11 +1857,11 @@
 
         // ========== Parse @mentions ==========
         function parseMentions(text, participants = []) {
-            // 处理 @所有人
+            // 处理 @Everyone
             let processedText = text;
-            if (processedText.includes('@所有人') || processedText.includes('@everyone')) {
-                const everyoneMention = '<span class="mention" data-mention="everyone">@所有人</span>';
-                processedText = processedText.replace(/@所有人/g, everyoneMention);
+            if (processedText.includes('@Everyone') || processedText.includes('@everyone')) {
+                const everyoneMention = '<span class="mention" data-mention="everyone">@Everyone</span>';
+                processedText = processedText.replace(/@Everyone/g, everyoneMention);
                 processedText = processedText.replace(/@everyone/g, everyoneMention);
             }
             
@@ -2176,7 +2176,7 @@
                     e.stopPropagation();
                     const username = el.dataset.mention;
                     if (username === 'everyone') {
-                        showNotification('@所有人 已通知所有成员', 'primary');
+                        showNotification('@Everyone 已通知所有成员', 'primary');
                         return;
                     }
                     window.location.href = `poSter_profile.html?username=${encodeURIComponent(username)}`;
@@ -2362,14 +2362,14 @@
             const cursorPos = this.selectionStart;
             const textBeforeCursor = value.substring(0, cursorPos);
             
-            // 检查 @所有人
-            const allMatch = textBeforeCursor.match(/@(所有人|everyone)$/);
+            // 检查 @Everyone
+            const allMatch = textBeforeCursor.match(/@(Everyone|everyone)$/);
             if (allMatch) {
                 const chat = allChats.find(c => c.id === currentChatId);
                 if (chat && chat.type === 'group') {
                     mentionSuggestions.innerHTML = `
                         <div class="suggestion-item" data-username="everyone">
-                            <span class="handle">@所有人 (All Members)</span>
+                            <span class="handle">@Everyone (All Members)</span>
                         </div>
                     `;
                     mentionSuggestions.style.display = 'block';
@@ -2392,10 +2392,10 @@
                 const chat = allChats.find(c => c.id === currentChatId);
                 if (chat && chat.participants) {
                     const participants = chat.participants.filter(p => p !== currentUser);
-                    // 添加 @所有人 选项（仅群组）
+                    // 添加 @Everyone 选项（仅群组）
                     let suggestions = [];
                     if (chat.type === 'group') {
-                        suggestions.push({ username: 'everyone', display: '@所有人 (All Members)' });
+                        suggestions.push({ username: 'everyone', display: '@Everyone (All Members)' });
                     }
                     participants.forEach(p => {
                         suggestions.push({ username: p, display: '@' + p });
@@ -2412,7 +2412,7 @@
                                 const username = this.dataset.username;
                                 const text = messageInput.value;
                                 const beforeAt = text.substring(0, text.lastIndexOf('@'));
-                                const display = username === 'everyone' ? '所有人' : username;
+                                const display = username === 'everyone' ? 'Everyone' : username;
                                 messageInput.value = beforeAt + '@' + display + ' ';
                                 messageInput.focus();
                                 mentionSuggestions.style.display = 'none';
@@ -2429,8 +2429,8 @@
                     if (chat && chat.participants) {
                         const participants = chat.participants.filter(p => p !== currentUser);
                         let suggestions = [];
-                        if (chat.type === 'group' && '所有人'.startsWith(afterAt)) {
-                            suggestions.push({ username: 'everyone', display: '@所有人 (All Members)' });
+                        if (chat.type === 'group' && 'Everyone'.startsWith(afterAt)) {
+                            suggestions.push({ username: 'everyone', display: '@Everyone (All Members)' });
                         }
                         participants.filter(p => p.toLowerCase().startsWith(afterAt.toLowerCase())).forEach(p => {
                             suggestions.push({ username: p, display: '@' + p });
@@ -2447,7 +2447,7 @@
                                     const username = this.dataset.username;
                                     const text = messageInput.value;
                                     const beforeAt = text.substring(0, text.lastIndexOf('@'));
-                                    const display = username === 'everyone' ? '所有人' : username;
+                                    const display = username === 'everyone' ? 'Everyone' : username;
                                     messageInput.value = beforeAt + '@' + display + ' ';
                                     messageInput.focus();
                                     mentionSuggestions.style.display = 'none';
