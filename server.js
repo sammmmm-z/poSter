@@ -4,15 +4,24 @@ const cors = require('cors');
 const crypto = require('crypto');
 const path = require('path');
 const multer = require('multer');
-const fs = require('fs');
-const { MongoClient, ObjectId } = require('mongodb');
+const { MongoClient } = require('mongodb');
+const cloudinary = require('cloudinary').v2;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const UPLOADS_DIR = 'uploads';
 
-// ============ MongoDB 连接 ============
-// ⚠️ 把下面这行换成你的 MongoDB 连接字符串！
+// ============================================================
+// ⚠️ 在这里替换成你的 Cloudinary 信息 ⚠️
+// ============================================================
+cloudinary.config({
+    cloud_name: 'dypdxasrx',     // ← 替换成你的
+    api_key: '728437311635572',           // ← 替换成你的
+    api_secret: 'tTFmv6W02It5AkOX2vV2MiOYYQY'      // ← 替换成你的
+});
+
+// ============================================================
+// ⚠️ 在这里替换成你的 MongoDB 连接字符串 ⚠️
+// ============================================================
 const MONGODB_URI = 'mongodb+srv://samzhang1207_db_user:lkZQF5JQPjSVXYwX@cluster0.sxzer6l.mongodb.net/?appName=Cluster0';
 const DB_NAME = 'posterDB';
 
@@ -21,6 +30,9 @@ let usersCollection;
 let feedsCollection;
 let messagesCollection;
 
+// ============================================================
+// 连接 MongoDB
+// ============================================================
 async function connectToMongoDB() {
     try {
         const client = new MongoClient(MONGODB_URI);
@@ -31,7 +43,6 @@ async function connectToMongoDB() {
         feedsCollection = db.collection('feeds');
         messagesCollection = db.collection('messages');
         
-        // 创建索引
         await usersCollection.createIndex({ username: 1 }, { unique: true });
         await usersCollection.createIndex({ 'profile.handle': 1 }, { unique: true });
         await feedsCollection.createIndex({ id: 1 }, { unique: true });
@@ -45,38 +56,30 @@ async function connectToMongoDB() {
     }
 }
 
-// --- Ensure Uploads Directory Exists ---
-if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR);
-}
-
-// --- Multer Configuration ---
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, UPLOADS_DIR);
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname);
-        cb(null, file.fieldname + '-' + uniqueSuffix + ext);
-    }
+// ============================================================
+// Multer 配置（用内存存储，不上传硬盘）
+// ============================================================
+const storage = multer.memoryStorage();
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB 限制
 });
 
-const upload = multer({ storage: storage });
-
-// --- Middlewares ---
+// ============================================================
+// 中间件
+// ============================================================
 app.use(cors());
 app.use(bodyParser.json());
-app.use('/uploads', express.static(path.join(__dirname, UPLOADS_DIR)));
+app.use(express.static(__dirname));
 
-// --- Helper Functions ---
-
+// ============================================================
+// Helper 函数
+// ============================================================
 const hashPassword = (password) => {
     return crypto.createHash('sha256').update(password).digest('hex');
 };
 
 // ========== 从 MongoDB 加载数据 ==========
-
 const loadUsers = async () => {
     try {
         const users = await usersCollection.find({}).toArray();
@@ -155,32 +158,8 @@ const saveMessages = async (messages) => {
     }
 };
 
-// ========== 生成群组 ID ==========
 const generateGroupId = () => {
     return 'group_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-};
-
-// ========== 更新消息中的头像 ==========
-const updateMessagesAvatar = async (username, newAvatar) => {
-    try {
-        const messages = await loadMessages();
-        let updated = false;
-        for (const chat of messages) {
-            for (const msg of chat.messages) {
-                if (msg.sender === username) {
-                    msg.avatar = newAvatar;
-                    updated = true;
-                }
-            }
-        }
-        if (updated) {
-            await saveMessages(messages);
-        }
-        return updated;
-    } catch (error) {
-        console.error('Error updating messages avatar:', error);
-        return false;
-    }
 };
 
 const calculateFollowersCount = (targetUsername, allUsers) => {
@@ -199,7 +178,29 @@ const calculateFollowersCount = (targetUsername, allUsers) => {
 };
 
 // ============================================================
-// ========== API ENDPOINTS ==========
+// 上传到 Cloudinary 的辅助函数
+// ============================================================
+const uploadToCloudinary = (fileBuffer, folder = 'poster') => {
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                folder: folder,
+                resource_type: 'auto'
+            },
+            (error, result) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            }
+        );
+        uploadStream.end(fileBuffer);
+    });
+};
+
+// ============================================================
+// API 端点
 // ============================================================
 
 // ========== Register ==========
@@ -261,17 +262,26 @@ app.post('/api/post/create', upload.array('media', 10), async (req, res) => {
     if (!user) {
         return res.status(404).json({ success: false, message: 'User not found.' });
     }
+
+    // 上传媒体文件到 Cloudinary
     const mediaFiles = req.files || [];
-    const media = mediaFiles.map(file => {
-        const ext = path.extname(file.originalname).toLowerCase();
-        const isImage = ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext);
-        const isVideo = ['.mp4', '.mov', '.avi', '.webm'].includes(ext);
-        return {
-            url: `uploads/${file.filename}`,
-            type: isImage ? 'image' : (isVideo ? 'video' : 'unknown'),
-            filename: file.filename
-        };
-    });
+    const media = [];
+    for (const file of mediaFiles) {
+        try {
+            const result = await uploadToCloudinary(file.buffer, 'poster_media');
+            const ext = path.extname(file.originalname).toLowerCase();
+            const isImage = ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext);
+            const isVideo = ['.mp4', '.mov', '.avi', '.webm'].includes(ext);
+            media.push({
+                url: result.secure_url,
+                type: isImage ? 'image' : (isVideo ? 'video' : 'unknown'),
+                filename: result.public_id
+            });
+        } catch (error) {
+            console.error('Error uploading to Cloudinary:', error);
+        }
+    }
+
     const feed = await loadFeed();
     const newPost = {
         id: Date.now(),
@@ -285,6 +295,7 @@ app.post('/api/post/create', upload.array('media', 10), async (req, res) => {
     };
     feed.push(newPost);
     await saveFeed(feed);
+
     const authorUser = users.find(u => u.username === username);
     const postResponse = {
         ...newPost,
@@ -347,13 +358,15 @@ app.delete('/api/post/delete', async (req, res) => {
         if (post.author !== username) {
             return res.status(403).json({ success: false, message: 'You are not authorized to delete this post.' });
         }
+        // 从 Cloudinary 删除媒体文件
         if (post.media && post.media.length > 0) {
             for (const mediaItem of post.media) {
-                try {
-                    const filePath = path.join(__dirname, mediaItem.url);
-                    fs.unlinkSync(filePath);
-                } catch (err) {
-                    console.warn(`Failed to delete media file: ${err.message}`);
+                if (mediaItem.filename) {
+                    try {
+                        await cloudinary.uploader.destroy(mediaItem.filename);
+                    } catch (err) {
+                        console.warn(`Failed to delete from Cloudinary: ${err.message}`);
+                    }
                 }
             }
         }
@@ -542,16 +555,21 @@ app.post('/api/profile/update', upload.single('avatar'), async (req, res) => {
     if (hobbies) {
         userProfile.hobbies = Array.isArray(hobbies) ? hobbies : hobbies.split(',').map(h => h.trim()).filter(h => h);
     }
+
     let newAvatar = userProfile.avatar;
     if (req.file) {
-        newAvatar = `uploads/${req.file.filename}`;
-        userProfile.avatar = newAvatar;
+        try {
+            const result = await uploadToCloudinary(req.file.buffer, 'poster_avatars');
+            newAvatar = result.secure_url;
+            userProfile.avatar = newAvatar;
+        } catch (error) {
+            console.error('Error uploading avatar to Cloudinary:', error);
+            return res.status(500).json({ success: false, message: 'Error uploading avatar.' });
+        }
     }
+
     try {
         await saveUsers(users);
-        if (req.file) {
-            await updateMessagesAvatar(username, newAvatar);
-        }
         res.json({ success: true, message: 'Profile updated successfully!', profile: userProfile });
     } catch (error) {
         console.error('Error saving users after profile update:', error);
@@ -697,34 +715,12 @@ app.delete('/api/user/delete', async (req, res) => {
         }
         const userToDelete = users[userIndex];
         const handleToDelete = userToDelete.profile.handle;
-        const avatarPath = userToDelete.profile.avatar;
-        if (avatarPath && avatarPath.startsWith('uploads/')) {
-            const fullPath = path.join(__dirname, avatarPath);
-            try {
-                fs.unlinkSync(fullPath);
-            } catch (err) {
-                console.warn(`Failed to delete avatar file: ${err.message}`);
-            }
-        }
         users.splice(userIndex, 1);
         users.forEach(u => {
             if (u.profile && Array.isArray(u.profile.followingList)) {
                 u.profile.followingList = u.profile.followingList.filter(h => h !== handleToDelete);
             }
         });
-        const userPosts = feed.filter(post => post.author === username);
-        for (const post of userPosts) {
-            if (post.media && post.media.length > 0) {
-                for (const mediaItem of post.media) {
-                    try {
-                        const filePath = path.join(__dirname, mediaItem.url);
-                        fs.unlinkSync(filePath);
-                    } catch (err) {
-                        console.warn(`Failed to delete media file: ${err.message}`);
-                    }
-                }
-            }
-        }
         feed = feed.filter(post => post.author !== username);
         feed.forEach(post => {
             if (post.likedBy && post.likedBy.includes(username)) {
@@ -747,9 +743,8 @@ app.delete('/api/user/delete', async (req, res) => {
 });
 
 // ============================================================
-// ========== USER LIST API ==========
+// USER LIST API
 // ============================================================
-
 app.get('/api/users/list', async (req, res) => {
     try {
         const users = await loadUsers();
@@ -781,9 +776,8 @@ app.get('/api/users/avatars', async (req, res) => {
 });
 
 // ============================================================
-// ========== MESSAGES API ==========
+// MESSAGES API
 // ============================================================
-
 app.get('/api/messages/list', async (req, res) => {
     const username = req.query.username;
     if (!username) {
@@ -980,9 +974,8 @@ app.post('/api/messages/group/create', async (req, res) => {
 });
 
 // ============================================================
-// ========== GROUP SETTINGS API ==========
+// GROUP SETTINGS API
 // ============================================================
-
 app.get('/api/messages/group/:groupId', async (req, res) => {
     const { groupId } = req.params;
     const username = req.query.username;
@@ -1286,9 +1279,8 @@ app.delete('/api/messages/group/:groupId', async (req, res) => {
 });
 
 // ============================================================
-// ========== REACTION & MESSAGE APIs ==========
+// REACTION & MESSAGE APIs
 // ============================================================
-
 app.post('/api/messages/react', async (req, res) => {
     const { username, messageId, emoji } = req.body;
     if (!username || !messageId || !emoji) {
@@ -1393,18 +1385,11 @@ app.put('/api/messages/edit', async (req, res) => {
 });
 
 // ============================================================
-// ========== Static & Redirect ==========
+// 启动服务器
 // ============================================================
-
 app.get('/', (req, res) => {
     res.redirect('/poSter_home.html');
 });
-
-app.use(express.static(__dirname));
-
-// ============================================================
-// ========== START SERVER ==========
-// ============================================================
 
 async function startServer() {
     const connected = await connectToMongoDB();
@@ -1414,6 +1399,7 @@ async function startServer() {
             console.log(`✅ Server running at http://localhost:${PORT}`);
             console.log(`🏠 Main page: http://localhost:${PORT}/poSter_home.html`);
             console.log(`📦 Database: MongoDB Atlas (${DB_NAME})`);
+            console.log(`🖼️  Images: Cloudinary`);
             console.log(`==============================================`);
         });
     } else {
